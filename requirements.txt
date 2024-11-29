@@ -1,0 +1,11 @@
+fastapi
+sqlalchemy 
+uvicorn
+pydantic 
+firebase-admin
+httpx
+python-dotenv
+transformers
+tf-keras
+jinja2
+# -e . 

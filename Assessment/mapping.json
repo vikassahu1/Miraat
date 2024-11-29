@@ -1,0 +1,108 @@
+{
+    "Mental_Health_Tests": {
+      "Mood Disorders": {
+        "Subcategories": {
+          "Major_Depressive_Disorder": {
+            "Tests": ["Patient Health Questionnaire (PHQ-9)"]
+          },
+          "Bipolar_Disorder": {
+            "Tests": ["Mood Disorder Questionnaire (MDQ)"]
+          }
+        }
+      },
+      "Anxiety Disorders": {
+        "Subcategories": {
+          "Generalized_Anxiety_Disorder": {
+            "Tests": ["Generalized Anxiety Disorder 7 (GAD-7)"]
+          },
+          "Social_Anxiety_Disorder": {
+            "Tests": ["Liebowitz Social Anxiety Scale (LSAS)"]
+          }
+        }
+      },
+      "Trauma and Stressor-Related Disorders": {
+        "Subcategories": {
+          "Post_Traumatic_Stress_Disorder": {
+            "Tests": ["PTSD Checklist for DSM-5 (PCL-5)"]
+          }
+        }
+      },
+      "Obsessive-Compulsive Disorder (OCD)": {
+        "Subcategories": {
+          "Obsessive_Compulsive_Disorder": {
+            "Tests": ["Yale-Brown Obsessive-Compulsive Scale (Y-BOCS)"]
+          }
+        }
+      },
+      "Personality Disorders": {
+        "Subcategories": {
+          "Borderline_Personality_Disorder": {
+            "Tests": ["McLean Screening Instrument for Borderline Personality Disorder (MSI-BPD)"]
+          }
+        }
+      },
+      "Eating Disorders": {
+        "Subcategories": {
+          "Eating_Disorders": {
+            "Tests": ["Eating Attitudes Test (EAT-26)"]
+          }
+        }
+      },
+      "Substance Use Disorders": {
+        "Subcategories": {
+          "Alcohol_Use_Disorder": {
+            "Tests": ["Alcohol Use Disorders Identification Test (AUDIT)"]
+          },
+          "Drug_Use_Disorders": {
+            "Tests": ["Drug Abuse Screening Test (DAST-10)"]
+          }
+        }
+      },
+      "Psychotic Disorders": {
+        "Subcategories": {
+          "Schizophrenia": {
+            "Tests": ["Positive and Negative Syndrome Scale (PANSS - Shortened Version)"]
+          }
+        }
+      },
+      "Neurodevelopmental Disorders": {
+        "Subcategories": {
+          "Autism_Spectrum_Disorder": {
+            "Tests": ["Autism Spectrum Rating Scales (ASRS - Short Version)"]
+          },
+          "Attention_Deficit_Hyperactivity_Disorder": {
+            "Tests": ["Vanderbilt ADHD Diagnostic Rating Scale (VADRS)"]
+          }
+        }
+      },
+      "Dissociative Disorders": {
+        "Subcategories": {
+          "Dissociative_Identity_Disorder": {
+            "Tests": ["Dissociative Experiences Scale (DES)"]
+          }
+        }
+      },
+      "Impulse Control Disorders": {
+        "Subcategories": {
+          "Intermittent_Explosive_Disorder": {
+            "Tests": ["Intermittent Explosive Disorder Scale (IEDS)"]
+          }
+        }
+      },
+      "Social and Emotional Well-being": {
+        "Subcategories": {
+          "General_Emotional_Well_being": {
+            "Tests": ["Warwick-Edinburgh Mental Well-being Scale (WEMWBS)"]
+          }
+        }
+      },
+      "Suicidal Tendencies": {
+        "Subcategories": {
+          "Suicidal_Tendencies": {
+            "Tests": ["Columbia-Suicide Severity Rating Scale (C-SSRS)"]
+          }
+        }
+      }
+    }
+  }
+  
