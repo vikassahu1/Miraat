@@ -1,0 +1,18 @@
+{
+    "Patient Health Questionnaire (PHQ-9)":"phq9_questions",
+    "Mood Disorder Questionnaire (MDQ)":"mdq_questions",
+    "Generalized Anxiety Disorder 7 (GAD-7)":"gad7_questions",
+    "Liebowitz Social Anxiety Scale (LSAS)": "lsas_questions",
+    "PTSD Checklist for DSM-5 (PCL-5)" : "pcl5_questions",
+    "Yale-Brown Obsessive-Compulsive Scale (Y-BOCS)": "y_bocs_questions",
+    "McLean Screening Instrument for Borderline Personality Disorder (MSI-BPD)":"msibpd_questions",
+    "Eating Attitudes Test (EAT-26)": "eat26_questions",
+    "Alcohol Use Disorders Identification Test (AUDIT)": "audit_questions",
+    "Drug Abuse Screening Test (DAST-10)":"dast10_questions",
+    "Positive and Negative Syndrome Scale (PANSS - Shortened Version)":"panss_questions",
+    "Autism Spectrum Rating Scales (ASRS - Short Version)":"asrs_questions",
+    "Vanderbilt ADHD Diagnostic Rating Scale (VADRS)":"vadrs_questions",
+    "Intermittent Explosive Disorder Scale (IEDS)":  "ieds_questions",
+    "Warwick-Edinburgh Mental Well-being Scale (WEMWBS)": "wemwbs_questions",
+    "Columbia-Suicide Severity Rating Scale (C-SSRS)":"cssrs_questions"
+}

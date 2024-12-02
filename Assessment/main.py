@@ -12,7 +12,6 @@ candidate_labels = [
     "Substance Use Disorders", 
     "Psychotic Disorders", 
     "Neurodevelopmental Disorders", 
-    "Dissociative Disorders", 
     "Impulse Control Disorders", 
     "Social and Emotional Well-being",
     "Suicidal Tendencies"

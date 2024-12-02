@@ -75,13 +75,6 @@
           }
         }
       },
-      "Dissociative Disorders": {
-        "Subcategories": {
-          "Dissociative_Identity_Disorder": {
-            "Tests": ["Dissociative Experiences Scale (DES)"]
-          }
-        }
-      },
       "Impulse Control Disorders": {
         "Subcategories": {
           "Intermittent_Explosive_Disorder": {
