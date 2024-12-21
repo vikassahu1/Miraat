@@ -8,4 +8,5 @@ class TestRequest(BaseModel):
 
 class TestAndAnswer(BaseModel):
     test_name: str
+    subcategory:str 
     answers: Dict[str, int]

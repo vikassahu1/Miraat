@@ -2,6 +2,8 @@ from schemas import TestRequest,TestAndAnswer
 from typing import Dict
 from accessories.exception import CustomException
 import sys
+from accessories.logger import logging
+
 
 
 #We are gettign test and ans dict[str,str] form 
@@ -23,6 +25,9 @@ class Tests:
             return score, "Moderately severe symptoms"
         elif score>=20 and score<=27:
             return score, "Severe symptoms"
+
+
+
     
     def mdq(self,ans):
         counter = 1
@@ -46,6 +51,9 @@ class Tests:
         
 
 
+
+
+
     def gad7(self,ans):
         score = 0
         # Calculate the total score by summing up answers
@@ -61,6 +69,9 @@ class Tests:
             return score, "Moderate anxiety"
         elif score >= 15 and score <= 21:
             return score, "Severe anxiety"
+
+
+
 
     
 
@@ -161,6 +172,9 @@ class Tests:
             
 
 
+
+
+
     def evaluate_msi_bpd(self,responses):
         """
         Evaluates the McLean Screening Instrument for Borderline Personality Disorder (MSI-BPD).
@@ -183,9 +197,10 @@ class Tests:
             
         else:
             assessment = "The respondent's score does not suggest significant concerns related to Borderline Personality Disorder (BPD).\nHowever, this is a screening tool and not a diagnostic measure. If there are concerns, consulting a mental health professional is advised."
-
-        
         return score, assessment
+
+
+
 
 
 
@@ -215,6 +230,9 @@ class Tests:
             severity = "Clinical concern (Further evaluation recommended)"
 
         return total_score, severity
+
+
+
 
 
 
@@ -261,6 +279,9 @@ class Tests:
 
 
 
+
+
+
     def dast10_evaluation(self,ans):
         """
         Evaluate DAST-10 scores based on answers valued 1 (No) and 2 (Yes).
@@ -273,10 +294,10 @@ class Tests:
         """
         total_score = 0
 
-        # Score each question based on the user answers (1 for No, 2 for Yes)
-        for question_id in range(1, 11):
-            if question_id in ans:
-                total_score += ans[question_id]
+
+        # Score questions 1-10, options range from 1-7
+        for question_id, answer in ans.items():
+            total_score += (answer) 
 
         # Determine risk category based on total score
         if 10 <= total_score <= 14:
@@ -296,6 +317,9 @@ class Tests:
 
 
 
+
+
+
     def panss_evaluation(self,ans):
         """
         Evaluate PANSS scores based on user responses for 10 questions.
@@ -309,10 +333,8 @@ class Tests:
         total_score = 0
 
         # Score questions 1-10, options range from 1-7
-        for question_id in range(1, 11):
-            if question_id in ans:
-                total_score += ans[question_id]
-
+        for question_id, answer in ans.items():
+            total_score += (answer) 
         # Determine severity category based on total score
         if total_score <= 30:
             severity = "Low Severity"
@@ -326,6 +348,10 @@ class Tests:
             severity = "Invalid score"
 
         return total_score, severity
+
+
+
+
 
 
 
@@ -373,51 +399,38 @@ class Tests:
 
 
 
-    def wemwbs_evaluation(self,answers):
-        """
-        Evaluate the WEMWBS (Warwick-Edinburgh Mental Well-being Scale) based on user responses and provide an inference.
-
-        Parameters:
-            answers (dict): A dictionary where keys are question IDs (Q1, Q2, ..., Q14) and values are user responses (option IDs 1-5).
-
-        Returns:
-            tuple: The total score and an inference based on the score.
-        """
-        total_score = 0
-
-        # List of questions (IDs)
-        questions = [f"Q{i}" for i in range(1, 15)]
-
-        # Sum up the answers for each question
-        for question_id in questions:
-            if question_id in answers:
-                total_score += answers[question_id]
-
-        # Provide an inference based on the score
-        if total_score <= 28:
-            inference = "Low well-being: You may be experiencing low levels of well-being. It could be helpful to seek support or engage in activities that promote positive mental health."
-        elif 29 <= total_score <= 42:
-            inference = "Moderate well-being: Your well-being is average. Consider exploring ways to improve your mental health through self-care or professional guidance."
-        elif 43 <= total_score <= 56:
-            inference = "Good well-being: You are experiencing good levels of well-being. Continue engaging in activities that support your mental and emotional health."
-        elif total_score > 56:
-            inference = "Excellent well-being: You have high well-being. Keep up the great work maintaining a positive outlook and engaging in healthy practices."
-
-        return total_score, inference
 
 
+    def wemwbs_evaluation(self, ans):
+            # Your existing code for evaluating the WEMWBS
+            total_score = 0
 
+            for question_id, answer in ans.items():
+                total_score += (answer - 1)  # Make sure answers are converted to numerical values
 
+            # Provide an inference based on the score
+            if total_score <= 28:
+                inference = "Low well-being: You may be experiencing low levels of well-being. It could be helpful to seek support or engage in activities that promote positive mental health."
+            elif 29 <= total_score <= 42:
+                inference = "Moderate well-being: Your well-being is average. Consider exploring ways to improve your mental health through self-care or professional guidance."
+            elif 43 <= total_score <= 56:
+                inference = "Good well-being: You are experiencing good levels of well-being. Continue engaging in activities that support your mental and emotional health."
+            elif total_score > 56:
+                inference = "Excellent well-being: You have high well-being. Keep up the great work maintaining a positive outlook and engaging in healthy practices."
+
+            return total_score, inference
 
 
 
 def get_inference(test:str,ans):
     try:
         testing = Tests()
+        logging.info("Test Inference Started")
+        logging.info("Test:",test,"Ans",ans) 
         if(test == "Patient Health Questionnaire (PHQ-9)"):
             return testing.phq9(ans)
         elif (test == "Mood Disorder Questionnaire (MDQ)"):
-            return mdq(ans)
+            return testing.mdq(ans)
         elif (test == "Generalized Anxiety Disorder 7 (GAD-7)"):
             return testing.gad7(ans)
         elif(test == "Liebowitz Social Anxiety Scale (LSAS)"):
@@ -441,9 +454,42 @@ def get_inference(test:str,ans):
         elif (test == "Warwick-Edinburgh Mental Well-being Scale (WEMWBS)"):
             return testing.wemwbs_evaluation(ans)
         else:
-            return (0,"Test not available as for now !, Please evaluate yourself on test from outer sources")
+            return (0,"Evaluation not available as for now !, Please evaluate yourself on test from outer sources")
     except Exception as e:
+        logging.error(f"Error occurred: {e}")
         raise CustomException(e, sys)
 
 
         
+'''
+
+
+# For testing purpose 
+if __name__ == "__main__":
+    logging.info("Logger working ")
+    test = {
+    "Q1": 2,
+    "Q2": 1,
+    "Q3": 1,
+    "Q4": 1,
+    "Q5": 1,
+    "Q6": 3,
+    "Q7": 1,
+    "Q8": 2,
+    "Q9": 1,
+    "Q10": 1,
+    # "Q11": 0,
+    # "Q12": 0,
+    # "Q13": 1,
+    # "Q14": 2
+  }
+    ans = get_inference("Positive and Negative Syndrome Scale (PANSS - Shortened Version)",test)
+    print(ans)
+
+'''
+
+'''
+Notes for the developer:
+1. Answers are in format {question_id: answer} where answer is an integer(1,2,3,4..).
+
+'''

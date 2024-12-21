@@ -20,6 +20,7 @@ from schemas import TestRequest,TestAndAnswer
 from Assessment.test_inference import get_inference
 
 
+
 load_dotenv()
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
@@ -27,6 +28,7 @@ BASE_URL = os.getenv("BASE_URL")
 
 class TextInput(BaseModel):
     text: str
+
 
 
 # Add CORS middleware
@@ -37,6 +39,8 @@ app.add_middleware(
     allow_methods=["*"],  # Allow all HTTP methods
     allow_headers=["*"],  # Allow all headers
 )
+
+
 
 
 
@@ -71,6 +75,8 @@ async def take_input(request: Request,  input: TextInput):
 
 
 
+
+# To get the questions for a specific test we are using abbrevoiation mapping. 
 @app.post("/get_test_questions/")
 async def get_questions(data: TestRequest):
     try:
@@ -129,12 +135,17 @@ async def get_questions(data: TestRequest):
 
 
 
+
+
+
+
 @app.post("/get_inference_from_test/")
 async def get_inference_from_test(request: TestAndAnswer):
     try:
         # Directly access the validated Pydantic model
         test_name = request.test_name
         answers = request.answers
+        subcategory = request.subcategory
         
         if not test_name or not answers:
             raise HTTPException(status_code=400, detail="Missing test name or answers")
@@ -152,3 +163,8 @@ async def get_inference_from_test(request: TestAndAnswer):
         # Log the full error for debugging
         print(f"Error in get_inference_from_test: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+
+

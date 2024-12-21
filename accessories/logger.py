@@ -1,3 +1,4 @@
+# a module that allows you to track events that occur while your program is running (errors, warnings, and other events)
 import logging
 import os
 from datetime import datetime

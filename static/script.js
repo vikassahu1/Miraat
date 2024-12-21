@@ -1,5 +1,6 @@
 BASE_URL = 'http://127.0.0.1:8000';
 
+
 // For getting the disease information 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM fully loaded and parsed");
@@ -43,12 +44,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+
+
+
+
 async function processDisorders(disorder) {
     const resultDiv = document.getElementById("resultDiv");
 
     const paragraph = document.createElement("p");
     paragraph.innerHTML = "<b>Starting Assessments One-by-One</b>";
     resultDiv.appendChild(paragraph);
+
 
     for (const [disorderName, details] of Object.entries(disorder)) {
         for (const [subcategory, subcategoryDetails] of Object.entries(details.Subcategories)) {
@@ -61,6 +67,8 @@ async function processDisorders(disorder) {
                     const testParagraph = document.createElement("p");
                     testParagraph.innerHTML = `<b>Test: ${test}</b>`;
                     resultDiv.appendChild(testParagraph);
+                    
+                    console.log('Fetching questions for:', disorderName, subcategory, test);
 
                     try {
                         const response = await fetch(`${BASE_URL}/get_test_questions/`, {
@@ -73,7 +81,7 @@ async function processDisorders(disorder) {
                         if (response.ok && data.questions) {
                             const questions = data.questions;
                             console.log(`Rendering test: ${test}`);
-                            const inference = await renderfunction(test, questions);
+                            const inference = await renderfunction(subcategory,test, questions);
 
                             const inferencePara = document.createElement("p");
                             inferencePara.innerHTML = `<b>Inference:</b> ${inference.inference}`;
@@ -104,7 +112,7 @@ async function processDisorders(disorder) {
 
 
 
-async function renderfunction(test, list_of_questions) {
+async function renderfunction(subcategory,test, list_of_questions) {
     return new Promise((resolve, reject) => {
         if (!Array.isArray(list_of_questions)) {
             console.error("list_of_questions is not an array. Details:", list_of_questions);
@@ -130,14 +138,17 @@ async function renderfunction(test, list_of_questions) {
             questionText.textContent = `${question_id}. ${question}`;
             questionWrapper.appendChild(questionText);
 
+
+
+            // Options value are changing to counters for easy calculation
             let counter = 1;
             options.forEach(({ option_id, text }) => {
                 const optionWrapper = document.createElement('div');
 
                 const input = document.createElement('input');
                 input.type = 'radio';
-                input.name = `question_${question_id}`;
-                input.value = counter;
+                input.name = `${question_id}`;
+                input.value = `${counter}`;
                 input.id = `question_${question_id}_option_${option_id}`;
 
                 const label = document.createElement('label');
@@ -153,6 +164,8 @@ async function renderfunction(test, list_of_questions) {
             form.appendChild(questionWrapper);
         }
 
+
+        
         // Add a submit button to the form
         const submitButton = document.createElement('button');
         submitButton.type = 'submit';
@@ -169,15 +182,13 @@ async function renderfunction(test, list_of_questions) {
             const formData = new FormData(form);
             const answers = {};
 
+            // key is name attribute of the Form 
             for (const [key, value] of formData.entries()) {
-                answers[key] = parseInt(value); // Collect answers
+                answers[key] =value; // Collect answers
             }
 
             const testName = test; // Assuming test contains the name of the test
-            const payload = {
-                    test_name: testName,
-                    answers: answers
-            };
+            const subcat = subcategory;
             console.log('Submitted Answers:', answers);
 
 
@@ -191,15 +202,19 @@ async function renderfunction(test, list_of_questions) {
                     },
                     body: JSON.stringify({
                         test_name: testName,
+                        subcategory: subcat,
                         answers: answers
                     }),
                 });
-            
+
                 if (!res.ok) {
                     const errorText = await res.text();
                     throw new Error(`HTTP error! status: ${res.status}, message: ${errorText}`);
                 }
             
+
+
+                // Inferenvce part of the test 
                 const inference = await res.json();
                 console.log("Inference received:", inference);
                 resolve(inference);
@@ -211,10 +226,6 @@ async function renderfunction(test, list_of_questions) {
         });
     });
 }
-
-
-
-
 
 
 

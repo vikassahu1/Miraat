@@ -8,4 +8,8 @@ python-dotenv
 transformers
 tf-keras
 jinja2
+openai 
+langchain
+langchain-community
+langchain-openai
 # -e . 
