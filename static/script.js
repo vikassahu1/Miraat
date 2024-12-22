@@ -43,11 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-
-
-
-
-
+// Processes the disorders one by one 
 async function processDisorders(disorder) {
     const resultDiv = document.getElementById("resultDiv");
 
@@ -105,13 +101,7 @@ async function processDisorders(disorder) {
 }
 
 
-
-
-
-
-
-
-
+// To render the questions and get the answers 
 async function renderfunction(subcategory,test, list_of_questions) {
     return new Promise((resolve, reject) => {
         if (!Array.isArray(list_of_questions)) {
@@ -229,9 +219,7 @@ async function renderfunction(subcategory,test, list_of_questions) {
 
 
 
-
-
-
+// To build the disorder list in the left side div 
 function buildDisorderList(disorder) {
     const ul = document.createElement("ul");
 

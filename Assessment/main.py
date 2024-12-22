@@ -57,16 +57,9 @@ class Assess:
     
 
 
-
-
-
-
-
-        
-
-if __name__ == '__main__':
-    symptom_text = "my name is khan"
-    assess = Assess(symptom_text)
-    print(type(assess.classify_dual()))
-    print("Mental Health Disorders:", assess.dignose())
-    print("Mental Health Symptom or Emotion:", assess.classify_dual())
+# if __name__ == '__main__':
+#     symptom_text = "my name is khan"
+#     assess = Assess(symptom_text)
+#     print(type(assess.classify_dual()))
+#     print("Mental Health Disorders:", assess.dignose())
+#     print("Mental Health Symptom or Emotion:", assess.classify_dual())

@@ -426,7 +426,7 @@ def get_inference(test:str,ans):
     try:
         testing = Tests()
         logging.info("Test Inference Started")
-        logging.info("Test:",test,"Ans",ans) 
+        logging.info("Test: %s, Ans: %s", test, ans)
         if(test == "Patient Health Questionnaire (PHQ-9)"):
             return testing.phq9(ans)
         elif (test == "Mood Disorder Questionnaire (MDQ)"):
@@ -461,7 +461,6 @@ def get_inference(test:str,ans):
 
 
         
-'''
 
 
 # For testing purpose 
@@ -485,8 +484,6 @@ if __name__ == "__main__":
   }
     ans = get_inference("Positive and Negative Syndrome Scale (PANSS - Shortened Version)",test)
     print(ans)
-
-'''
 
 '''
 Notes for the developer:
