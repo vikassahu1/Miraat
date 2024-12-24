@@ -1,16 +1,28 @@
 BASE_URL = 'http://127.0.0.1:8000';
 
 
+
+let user_context = "";
+
 // For getting the disease information 
 document.addEventListener('DOMContentLoaded', () => {
+    user_context = "";
+
+    // maintaining the context at each step 
     console.log("DOM fully loaded and parsed");
 
+
+    // On submitting the text form . 
     document.getElementById("submitButton").addEventListener("click", async function (e) {
         e.preventDefault(); // Prevent default form submission behavior
         console.log("Submit button clicked");
 
         const inputText = document.getElementById("textInput").value;
         console.log("Input text:", inputText);
+        
+
+        // Maintaining user context for next request
+        user_context += "User Input: " + inputText + "\n"; 
 
         try {
             const response = await fetch(`${BASE_URL}/assess_text/`, {
@@ -21,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ text: inputText }),
             });
 
+
             const data = await response.json();
             console.log("Parsed data:", data);
 
@@ -29,10 +42,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (data.disorder === "no disorder") {
                 resultDiv.innerHTML = "<p>No disorders detected.</p>";
+
+                // DISEASE user context
+                user_context += "No disorders detected.\n";
             } else {
                 const disorderList = buildDisorderList(data.disorder);
                 resultDiv.appendChild(disorderList);
-                processDisorders(data.disorder); 
+
+                user_context += "Following are the Disorders, their test and test inference processessed from the user\n";
+                await processDisorders(data.disorder); 
+
+
+                // <------------------------------------------------------------------- Showing solution to the user  -------------------------------------------------------------------------------------------->
+                const solutionDiv = document.getElementById('two');
+                solutionDiv.innerHTML = ""; // Clear previous test
+
+                try{
+                    const res = await fetch(`${BASE_URL}/get_solution_text/`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            context: user_context
+                        }),
+                    });
+    
+                    if (!res.ok) {
+                        const errorText = await res.text();
+                        throw new Error(`HTTP error! status: ${res.status}, message: ${errorText}`);
+                    }
+                    else{
+                        const data = await res.json();
+                        console.log("Solution to the user :", data);
+                        solutionDiv.innerHTML = `${data.solution_text}`;
+                    }
+                
+
+                }
+                catch(error){
+                    console.error("Error:", error);
+                    document.getElementById("resultDiv").innerHTML =
+                        "<p>Something went wrong. Please try again.</p>";
+                }
+                    
+
             }
         } catch (error) {
             console.error("Error:", error);
@@ -41,6 +96,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+
+
+
 
 
 // Processes the disorders one by one 
@@ -73,6 +132,8 @@ async function processDisorders(disorder) {
                             body: JSON.stringify({ disorder_name: disorderName, sub_category: subcategory, test }),
                         });
 
+                        
+
                         const data = await response.json();
                         if (response.ok && data.questions) {
                             const questions = data.questions;
@@ -81,9 +142,17 @@ async function processDisorders(disorder) {
 
                             const inferencePara = document.createElement("p");
                             inferencePara.innerHTML = `<b>Inference:</b> ${inference.inference}`;
+                            
+                            // Inference user context
+                            user_context += "Disorder: " + disorderName + " , Subcategory: " + subcategory + " , Test: " + test + " , Inference: " + inference.inference +"\n";
+
                             resultDiv.appendChild(inferencePara);
+
+
                         } else {
                             console.error(`No questions found for test: ${test}`);
+                            user_context += "Disorder: " + disorderName + " , Subcategory: " + subcategory 
+
                             const errorPara = document.createElement("p");
                             errorPara.innerHTML = `<b>Error:</b> No questions available for test: ${test}`;
                             resultDiv.appendChild(errorPara);
@@ -98,7 +167,13 @@ async function processDisorders(disorder) {
             }
         }
     }
+
+
+
+
 }
+
+
 
 
 // To render the questions and get the answers 
@@ -223,9 +298,12 @@ async function renderfunction(subcategory,test, list_of_questions) {
 function buildDisorderList(disorder) {
     const ul = document.createElement("ul");
 
+
     for (const [disorderName, details] of Object.entries(disorder)) {
         const disorderLi = document.createElement("li");
         disorderLi.innerHTML = `<strong>${disorderName}</strong>`;
+
+
 
         if (details.Subcategories) {
             const subcategoriesUl = document.createElement("ul");

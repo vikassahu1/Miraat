@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
 from Assessment.main import Assess
 from accessories.exception import CustomException
+from llm_setup.main import LLMSetup
 from pydantic import BaseModel
 import asyncio
 import httpx
@@ -16,7 +17,8 @@ import sys
 
 #imports that may be shifted
 from accessories.utils import load_json
-from schemas import TestRequest,TestAndAnswer
+from accessories.logger import logging
+from schemas import TestRequest,TestAndAnswer,solRequest
 from Assessment.test_inference import get_inference
 
 
@@ -166,5 +168,22 @@ async def get_inference_from_test(request: TestAndAnswer):
 
 
 
+    
+    
+@app.post("/get_solution_text/")
+async def get_solution_text(text: solRequest):
+    text = text.context
+    logging.info(text)
+    try:
+        set_up = LLMSetup()
+        solution_html = set_up.get_result(text)
+        logging.info(solution_html)
 
-
+        return JSONResponse(
+            content={
+                "solution_text": solution_html
+            }
+        )
+    except Exception as e:
+        print(f"Error in get_solution_text: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

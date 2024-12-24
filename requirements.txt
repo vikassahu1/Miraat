@@ -12,4 +12,9 @@ openai
 langchain
 langchain-community
 langchain-openai
+sqlalchemy
+firebase-admin
+langchain-huggingface
+google-generativeai
+
 # -e . 

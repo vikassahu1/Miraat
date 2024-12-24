@@ -10,3 +10,6 @@ class TestAndAnswer(BaseModel):
     test_name: str
     subcategory:str 
     answers: Dict[str, int]
+
+class solRequest(BaseModel):
+    context: str

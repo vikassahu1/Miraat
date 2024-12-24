@@ -10,3 +10,8 @@ def load_json(file_name):
         raise Exception(f"{file_name} not found in Assessment package.")
     except json.JSONDecodeError as e:
         raise Exception(f"Error decoding JSON: {e}")
+
+
+def make_template():
+    pass 
+
