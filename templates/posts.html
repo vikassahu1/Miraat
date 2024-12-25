@@ -1,0 +1,45 @@
+<!-- templates/posts.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Posts</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <link rel="stylesheet" href="{{ url_for('static', path='/output.css') }}">
+</head>
+<body class="bg-gray-100">
+    <div class="max-w-2xl mx-auto p-4">
+        <!-- Post Creation Form -->
+        <form class="mb-8 bg-white p-4 rounded-lg shadow"
+              hx-post="/posts/"
+              hx-encoding="multipart/form-data"
+              hx-target="#posts">
+            <textarea name="content" 
+                      class="w-full p-2 border rounded mb-2"
+                      placeholder="What's on your mind?"></textarea>
+            <input type="file" 
+                   name="image" 
+                   class="mb-2"
+                   accept="image/*">
+            <button class="bg-blue-500 text-white px-4 py-2 rounded">Post</button>
+        </form>
+
+        <!-- Posts List -->
+        <div id="posts" class="space-y-4">
+            {% for post in posts %}
+            <div class="bg-white p-4 rounded-lg shadow">
+                <p class="mb-2">{{ post.content }}</p>
+                {% if post.image_url %}
+                <img src="{{ post.image_url }}" 
+                     class="max-w-full rounded mb-2">
+                {% endif %}
+                <button class="text-blue-500"
+                        hx-post="/posts/{{ post.id }}/like"
+                        hx-swap="outerHTML">
+                    ❤️ {{ post.likes|length }}
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

@@ -1,6 +1,10 @@
 from fastapi import FastAPI,HTTPException,Depends,Request,BackgroundTasks
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse,HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
+
+
+
 from Assessment.main import Assess
 from accessories.exception import CustomException
 from llm_setup.main import LLMSetup
@@ -24,8 +28,12 @@ from Assessment.test_inference import get_inference
 
 
 load_dotenv()
+
+
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 BASE_URL = os.getenv("BASE_URL")
 
 class TextInput(BaseModel):
@@ -44,8 +52,26 @@ app.add_middleware(
 
 
 
+# Rendering html paegs 
+@app.get("/")
+async def home(request: Request):
+    return templates.TemplateResponse("homepage.html", {"request": request})
 
 
+@app.get("/assessment")
+async def assessment(request: Request):
+    return templates.TemplateResponse("assessment.html", {"request": request})
+
+
+
+
+
+
+
+
+
+
+# Post request pages 
 @app.post("/assess_text/")
 async def take_input(request: Request,  input: TextInput):
     try:

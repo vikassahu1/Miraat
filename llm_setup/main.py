@@ -9,7 +9,8 @@ import re
 # Load API key from environment variables
 load_dotenv()
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
+os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY 
+
 
 class LLMSetup:
     def __init__(self):
@@ -37,9 +38,9 @@ class LLMSetup:
         
         # Ensure there are no extra leading/trailing newlines
         text = text.strip()
-        
+         
         return text
-        
+
 
     def format_to_html(self, text: str) -> str:
         """
@@ -96,9 +97,6 @@ class LLMSetup:
             raise CustomException(e, sys)
 
 
-
-
-    
 
 
 

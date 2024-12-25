@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Miraat</title>
+    <link rel="stylesheet" href="../static/output.css">
+</head>
+<body class="bg-sky-950 text-black font-sans relative">
+
+    <!-- Full Page Background Pattern -->
+    
+    <div class="absolute inset-0 -z-10 h-full w-full bg-white bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1.5px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:6rem_4rem]"></div>
+    
+    <!-- Main Content - Navbar and Hero Section -->
+    <nav class="relative z-10 flex justify-between items-center h-[70px] px-10 md:px-15 ">
+        <div class="text-2xl font-bold font-serif rounded-md">
+            Miraat
+        </div>
+
+        <div class="space-x-9 text-lg font-semibold font-sans text-black hidden md:flex">
+            <a href="/assessment" class="hover:text-green-300">Assessment</a>
+            <a href="/assessment" class="hover:text-green-300 ">ChatBot</a>
+            <a href="#assessment" class="hover:text-green-300 ">Community</a>
+            <a href="#assessment" class="hover:text-green-300 ">Read</a>
+            <a href="#assessment" class="hover:text-green-300 ">About</a>
+            <a href="#assessment" class="hover:text-green-300 ">Contact</a>
+        </div>
+
+        <div class="space-x-4 hidden font-sans font-semibold md:flex">
+            <a href="#about" class="hover:text-sky-300 bg-green-300 text-lg rounded-full px-10 py-2">Login</a>
+        </div>
+
+
+        <div class="md:hidden">
+            <button id="menu-button" class="text-xl">&#9776;</button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="md:hidden flex flex-col items-center space-y-4 py-4 bg-sky-800 hidden">
+        <a href="#about" class="hover:text-sky-300">About</a>
+        <a href="#contact" class="hover:text-sky-300">Contact</a>
+        <a href="#assessment" class="hover:text-sky-300">Assessment</a>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="relative z-10 h-[calc(100vh-70px)] flex justify-between px-6 md:px-0 ">
+        <!-- Text Section (Left) -->
+        <div class="text-center w-full mt-28 md:w-1/2">
+            <h1 class="text-5xl md:text-7xl font-bold mb-10">Taking Care of Your <span class="text-green-400 font-mono">Mind</span>, Together</h1>
+            <p class="text-lg md:text-2xl font-serif text-black-400 ">Miraat is here to support your mental well-being with assessments, resources, and community support.</p>
+            <button class="p-3 px-20 text-xl rounded-full m-16 bg-green-300 hover:bg-green-200 font-semibold">Explore</button>
+        </div>
+        
+        <!-- Image Section (Right) -->
+        <div class="w-full hidden md:w-1/2 h-full overflow-hidden md:flex items-center justify-center">
+            <img src="../static/images/man bg.jpg" alt="Hero Image" class="w-[90%] h-[90%] object-cover rounded-s-full">
+        </div>
+    </section>
+    
+
+
+<!-- Feature Section -->
+<div class="bg-gray-100 px-6 py-10">
+    <h1 class="text-4xl font-bold mb-1 text-center">Features</h1>
+    <div class=" h-[5px] w-[60px] rounded-lg bg-green-300 mx-auto mb-8"></div>
+
+
+    <!-- container for cards  -->
+    <div class="flex flex-wrap justify-between gap-y-6">
+        <!-- Card 1 -->
+        <div class="w-full md:w-[350px] h-[400px] bg-white rounded-lg shadow-lg p-5 flex flex-col items-center">
+            <div class="w-full h-40 bg-sky-300 rounded-t-lg overflow-hidden flex justify-center">
+                <img src="../static/images/add.jpg" alt="Feature 1" class="object-cover h-full w-full">
+            </div>
+            <h3 class="text-xl font-semibold mt-5">Assess Mental Health</h3>
+            <div class="mt-3 text-center text-gray-700 overflow-auto max-h-[200px]">
+                <p>Get insights into your mental well-being with a quick, personalized assessment. Discover tailored recommendations to support your mental health journey.</p>
+            </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="w-full md:w-[350px] h-[400px] bg-white rounded-lg shadow-lg p-5 flex flex-col items-center">
+            <div class="w-full h-40 bg-sky-300 rounded-t-lg overflow-hidden flex justify-center">
+                <img src="../static/images/feat_track.jpg" alt="Feature 2" class="object-cover h-full w-full">
+            </div>
+            <h3 class="text-xl font-semibold mt-5">Track Mental Health</h3>
+            <div class="mt-3 text-center text-gray-700 overflow-auto max-h-[200px]">
+                <p>Monitor your mental well-being over time with easy, personalized insights. Stay on top of your progress and build healthy habits.</p>
+            </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="w-full md:w-[350px] h-[400px] bg-white rounded-lg shadow-lg p-5 flex flex-col items-center">
+            <div class="w-full h-40 bg-sky-300 rounded-t-lg overflow-hidden flex justify-center">
+                <img src="../static/images/rem.jpg" alt="Feature 3" class="object-cover h-full w-full">
+            </div>
+            <h3 class="text-xl font-semibold mt-5">Track Mental Health</h3>
+            <div class="mt-3 text-center text-gray-700 overflow-auto max-h-[200px]">
+                <p>Monitor your mental well-being over time with easy, personalized insights. Stay on top of your progress and build healthy habits.</p>
+            </div>
+        </div>
+
+        <!-- Card 4 (Duplicate of Card 3) -->
+        <div class="w-full md:w-[350px] h-[400px] bg-white rounded-lg shadow-lg p-5 flex flex-col items-center">
+            <div class="w-full h-40 bg-sky-300 rounded-t-lg overflow-hidden flex justify-center">
+                <img src="../static/images/rem.jpg" alt="Feature 3" class="object-cover h-full w-full">
+            </div>
+            <h3 class="text-xl font-semibold mt-5">Track Mental Health</h3>
+            <div class="mt-3 text-center text-gray-700 overflow-auto max-h-[200px]">
+                <p>Monitor your mental well-being over time with easy, personalized insights. Stay on top of your progress and build healthy habits.</p>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+
+
+<!-- About Section  -->
+    <div class="relative z-10 h-[80vh] bg-white flex justify-between px-6 md:px-0 ">
+
+        <!-- Text Section (Left) -->
+         
+        <div class=" hidden md:w-1/2 h-full overflow-hidden md:flex items-center justify-center">
+            <img src="../static/images/buddha.jpg" alt="Hero Image" class="w-[90%] h-[90%] object-cover rounded-full">
+        </div>
+         <!-- Image Section (Right) -->
+        <div class="text-center w-full mt-28 px-10 md:w-1/2">
+            <h1 class="text-4xl font-bold mb-1 text-center">About</h1>
+            <div class=" h-[5px] w-[60px] rounded-lg bg-green-300 mx-auto mb-8"></div>
+
+            <p class="text-lg md:text-2xl font-serif text-black-400 ">Miraat is a mental health platform dedicated to helping individuals understand, manage, and improve their emotional well-being. With personalized assessments, AI-powered chatbot support, and valuable resources, Miraat provides a safe space for users to track their progress, find expert guidance, and access mental health tools to enhance their overall well-being. Your journey to a healthier mind starts here.</p>
+            <!-- <button class="p-3 px-20 text-xl rounded-full m-16 bg-green-300 hover:bg-green-200 font-semibold">Learn More</button> -->     
+        </div>
+        
+       
+    </div>
+
+
+
+
+<!-- Footer Section -->
+<footer class="bg-black text-white py-3">
+    <div class="text-center">
+        <p>&copy; <span id="year"></span> All rights reserved | Made with ❤️ by Vikas</p>
+    </div>
+</footer>
+
+
+
+
+    <!-- JavaScript for Mobile Menu Toggle -->
+    
+    <script>
+        document.getElementById("year").textContent = new Date().getFullYear();
+        const menuButton = document.getElementById('menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        menuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html>
