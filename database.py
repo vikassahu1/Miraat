@@ -1,4 +1,5 @@
 from sqlalchemy import create_engine, Column, String
+from sqlalchemy import create_engine, Column, String
 from sqlalchemy.orm import sessionmaker,DeclarativeBase
 
 # Database URL - Update these credentials to match your PostgreSQL setup
@@ -10,14 +11,13 @@ engine = create_engine(DATABASE_URL)
 # Create SessionLocal class
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+# Base class for models
+class Base(DeclarativeBase): 
+    pass
 
-# Dependency to get database session
-def get_db():
-    try:
-        db = SessionLocal()
-        yield db
-    except SQLAlchemyError as e:
-        print(f"Database error: {e}")
-        raise
-    finally:
-        db.close()
+# User model
+class User(Base):
+    __tablename__ = "users"
+    id = Column(String, primary_key=True)
+    email = Column(String, unique=True)
+    name = Column(String, nullable=True)

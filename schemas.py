@@ -13,3 +13,12 @@ class TestAndAnswer(BaseModel):
 
 class solRequest(BaseModel):
     context: str
+
+class TextInput(BaseModel):
+    text: str
+
+
+class TokenRequest(BaseModel):
+    token: str
+    class Config:
+        orm_mode = True

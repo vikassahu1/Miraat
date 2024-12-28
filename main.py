@@ -22,8 +22,15 @@ import sys
 #imports that may be shifted
 from accessories.utils import load_json
 from accessories.logger import logging
-from schemas import TestRequest,TestAndAnswer,solRequest
+from schemas import TestRequest,TestAndAnswer,solRequest,TokenRequest,TextInput
 from Assessment.test_inference import get_inference
+
+
+# Database imports 
+from database import User, Base, engine, SessionLocal
+from sqlalchemy.orm import Session 
+from firebase_admin import auth, credentials, initialize_app
+from sqlalchemy.exc import SQLAlchemyError
 
 
 
@@ -31,13 +38,29 @@ load_dotenv()
 
 
 app = FastAPI()
+Base.metadata.create_all(bind=engine)
+
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
+cred = credentials.Certificate("miraat-54aac-firebase-adminsdk-9r6ms-cfe53c0902.json")
+initialize_app(cred)
 BASE_URL = os.getenv("BASE_URL")
 
-class TextInput(BaseModel):
-    text: str
+
+
+# Dependency to get database session
+def get_db():
+    try:
+        db = SessionLocal()
+        yield db
+    except SQLAlchemyError as e:
+        print(f"Database error: {e}")
+        raise
+    finally:
+        db.close()
+
+
+
 
 
 
@@ -195,6 +218,8 @@ async def get_inference_from_test(request: TestAndAnswer):
 
 
     
+
+
     
 @app.post("/get_solution_text/")
 async def get_solution_text(text: solRequest):
@@ -213,3 +238,94 @@ async def get_solution_text(text: solRequest):
     except Exception as e:
         print(f"Error in get_solution_text: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+
+
+
+
+@app.get("/helplines")
+async def get_helplines(request: Request):
+    try:
+        file_path = os.path.join(os.getcwd(), 'accessories', 'helplines.json')
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+
+        helplines = data.get("helplines", {})
+
+    except Exception as e:
+        return {"error": str(e)}
+
+    # Pass helpline data to the template
+    return templates.TemplateResponse("helplines.html", {"request": request, "helplines": helplines})
+        
+
+
+
+
+
+# Login Systems 
+
+@app.get("/login")
+async def login(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+
+
+
+
+@app.post("/verify-token/")
+async def verify_token(request: TokenRequest, db: Session = Depends(get_db)):
+    try:
+        decoded_token = auth.verify_id_token(request.token)
+        uid = decoded_token.get("uid")
+        email = decoded_token.get("email")
+
+        # More detailed logging
+        print(f"UID: {uid}")
+        print(f"Email: {email}")
+        print(f"Full decoded token: {decoded_token}")
+
+        # Explicit error handling
+        if not uid or not email:
+            raise ValueError("Missing UID or email in token")
+
+        # User creation/verification logic
+        user = db.query(User).filter(User.id == uid).first()
+        if not user:
+            new_user = User(id=uid, email=email, name=decoded_token.get("name", ""))
+            db.add(new_user)
+            db.commit()
+            db.refresh(new_user)
+            return {"message": "New user created", "email": new_user.email}
+
+        return {"message": "User verified", "email": user.email}
+    except Exception as e:
+        print(f"Detailed error during token verification: {e}")
+        raise HTTPException(status_code=401, detail=str(e))
+
+
+
+
+
+@app.post("/register-user/")
+async def register_user(request: TokenRequest, db: Session = Depends(get_db)):
+    try:
+        token = request.token  # Extract token from JSON body
+        decoded_token = auth.verify_id_token(token)
+        uid = decoded_token["uid"]
+        email = decoded_token["email"]
+
+        # Check if user exists
+        user = db.query(User).filter(User.id == uid).first()
+        if not user:
+            new_user = User(id=uid, email=email, name=decoded_token.get("name", ""))
+            db.add(new_user)
+            db.commit()
+            return {"message": "New user created", "email": new_user.email}
+
+        return {"message": "User already exists", "email": user.email}
+    except Exception as e:
+        print(f"Error during registration: {e}")
+        raise HTTPException(status_code=400, detail=str(e))

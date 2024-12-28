@@ -1,0 +1,122 @@
+{
+    "helplines": {
+      "Kiran Helpline": {
+        "About": "Launched by the Ministry of Social Justice & Empowerment, it provides 24/7 psychological support, mental health first aid, crisis management, and referrals in 13 languages.",
+        "Type": "Government",
+        "Number": "1800-599-0019",
+        "Website": "https://socialjustice.gov.in",
+        "Hours": "24/7",
+        "Languages": "13 languages including Hindi, English, Tamil, Marathi, and Telugu",
+        "Specialty": "Comprehensive support for mental health, including crisis intervention and referrals to mental health professionals."
+      },
+      "Tele-MANAS": {
+        "About": "Initiated by the Ministry of Health & Family Welfare, it offers nationwide mental health services launched on World Mental Health Day, 2023.",
+        "Type": "Government",
+        "Number": "14416 or 1800-91-4416",
+        "Website": "https://www.mohfw.gov.in",
+        "Hours": "24/7",
+        "Languages": "Multiple regional languages along with Hindi and English",
+        "Specialty": "Focused on providing accessible mental health care across India with a robust support system."
+      },
+      "Samaritans Mumbai": {
+        "About": "Provides emotional support for individuals who are stressed, distressed, or suicidal. It is a confidential and empathetic service operating daily.",
+        "Type": "Non-Government",
+        "Number": "+91 8422984530",
+        "Website": "http://www.samaritansmumbai.com",
+        "Hours": "3 pm to 9 pm, daily",
+        "Languages": "Primarily English and Hindi",
+        "Specialty": "Dedicated to offering a safe space for individuals to share their feelings without fear of judgment."
+      },
+      "Vandrevala Foundation": {
+        "About": "Offers free psychological counseling and crisis intervention 24/7 through both calls and WhatsApp. It is designed for immediate emotional and mental health support.",
+        "Type": "Non-Government",
+        "Number": "+91 9999666555",
+        "Website": "https://www.vandrevalafoundation.com",
+        "Hours": "24/7",
+        "Languages": "English, Hindi, and other regional languages",
+        "Specialty": "Specialized in addressing crisis situations with quick access to mental health professionals."
+      },
+      "AASRA": {
+        "About": "A nationwide organization providing confidential 24/7 support to individuals in distress or at risk of suicide. It is staffed with trained professionals and volunteers.",
+        "Type": "Non-Government",
+        "Number": "+91-22-27546669",
+        "Website": "http://www.aasra.info/",
+        "Hours": "24/7",
+        "Languages": "English, Hindi, and other regional languages",
+        "Specialty": "Focuses on suicide prevention and emotional support for those in crisis."
+      },
+      "iCall": {
+        "About": "Run by TISS, it provides free telephone and email-based counseling services. It is especially supportive of young people and marginalized communities.",
+        "Type": "Non-Government",
+        "Number": "+91 9152987821",
+        "Website": "https://icallhelpline.org",
+        "Hours": "10 am to 8 pm, Monday to Saturday",
+        "Languages": "English, Hindi, and other regional languages",
+        "Specialty": "Dedicated to providing inclusive mental health care and addressing psychosocial concerns."
+      },
+      "Lifeline Foundation": {
+        "About": "Based in Kolkata, it offers emotional support to individuals who are distressed, depressed, or suicidal. The helpline is confidential, non-judgmental, and aimed at providing immediate support to those in emotional crises.",
+        "Type": "Non-Government",
+        "Number": "+91 9088030303",
+        "Website": "http://www.lifelinefoundation.in",
+        "Hours": "10 am to 10 pm, daily",
+        "Languages": "Primarily English and Bengali, with support for other regional languages as needed",
+        "Specialty": "Focused on preventing suicides and offering empathetic listening to those experiencing loneliness or stress."
+      },
+      "Snehi": {
+      "About": "A Delhi-based organization that offers free mental health support to individuals in crisis or distress. It is focused on creating awareness about mental health and reducing stigma.",
+      "Type": "Non-Government",
+      "Number": "+91 9582208181",
+      "Website": "https://www.snehi.org.in/",
+      "Hours": "10 am to 8 pm, daily",
+      "Languages": "Hindi and English",
+      "Specialty": "Focuses on providing mental health care for underserved communities and promoting well-being."
+    },
+    "Parivarthan": {
+      "About": "A counseling, training, and research center in Bangalore offering professional and confidential mental health support. Services are available over the phone and in person.",
+      "Type": "Non-Government",
+      "Number": "+91 7676602602",
+      "Website": "https://parivarthan.org",
+      "Hours": "9 am to 5 pm, Monday to Friday",
+      "Languages": "English, Hindi, and Kannada",
+      "Specialty": "Emphasizes professional counseling and training for individuals and families."
+    },
+    "Connecting...": {
+      "About": "A Pune-based helpline providing emotional support to individuals facing stress, anxiety, or suicidal thoughts. Services are free and confidential.",
+      "Type": "Non-Government",
+      "Number": "+91 9922001122",
+      "Website": "http://connectingngo.org",
+      "Hours": "12 pm to 8 pm, daily",
+      "Languages": "English, Hindi, and Marathi",
+      "Specialty": "Focused on suicide prevention and emotional well-being through trained volunteers."
+    },
+    "The MINDS Foundation": {
+      "About": "A Gujarat-based organization promoting mental health awareness and providing accessible support for rural and urban populations.",
+      "Type": "Non-Government",
+      "Number": "+91 9952224414",
+      "Website": "http://mindsfoundation.org",
+      "Hours": "9 am to 6 pm, Monday to Saturday",
+      "Languages": "English, Hindi, and Gujarati",
+      "Specialty": "Targeted mental health care for rural communities with limited access to resources."
+    },
+    "Mitram Foundation": {
+      "About": "Based in Chennai, it provides mental health support for people experiencing emotional distress, depression, or anxiety.",
+      "Type": "Non-Government",
+      "Number": "+91 9677050101",
+      "Website": "https://maatramfoundation.com/",
+      "Hours": "10 am to 7 pm, daily",
+      "Languages": "English and Tamil",
+      "Specialty": "Dedicated to providing empathetic listening and mental health guidance."
+    },
+    "Cooj Mental Health Foundation": {
+      "About": "Located in Goa, it provides emotional support and mental health services, particularly to those at risk of suicide.",
+      "Type": "Non-Government",
+      "Number": "+91 9822588837",
+      "Website": "http://cooj.co.in",
+      "Hours": "9 am to 7 pm, Monday to Saturday",
+      "Languages": "English, Hindi, and Konkani",
+      "Specialty": "Focuses on preventing suicides and promoting mental health awareness in Goa."
+    }
+    }
+  }
+  
