@@ -1,48 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Miraat</title>
-    <link rel="stylesheet" href="../static/output.css">
-</head>
-<body class="bg-sky-950 text-black font-sans relative">
-
-    <!-- Full Page Background Pattern -->
-    
-    <div class="absolute inset-0 -z-10 h-full w-full bg-white bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1.5px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:6rem_4rem]"></div>
-    
-    <!-- Main Content - Navbar and Hero Section -->
-    <nav class="relative z-10 flex justify-between items-center h-[70px] px-10 md:px-15 ">
-        <div class="text-2xl font-bold font-serif rounded-md">
-            Miraat
-        </div>
-
-        <div class="space-x-9 text-lg font-semibold font-sans text-black hidden md:flex">
-            <a href="/assessment" class="hover:text-green-300">Assessment</a>
-            <a href="/assessment" class="hover:text-green-300 ">ChatBot</a>
-            <a href="#assessment" class="hover:text-green-300 ">Community</a>
-            <a href="/helplines" class="hover:text-green-300 ">Helplines</a>
-            <a href="#assessment" class="hover:text-green-300 ">About</a>
-            <a href="#assessment" class="hover:text-green-300 ">Contact</a>
-        </div>
-
-        <div class="space-x-4 hidden font-sans font-semibold md:flex">
-            <a href="/login" class="hover:text-sky-300 bg-green-300 text-lg rounded-full px-10 py-2">Login</a>
-        </div>
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
 
 
-        <div class="md:hidden">
-            <button id="menu-button" class="text-xl">&#9776;</button>
-        </div>
-    </nav>
-
-    <!-- Mobile Menu -->
-    <div id="mobile-menu" class="md:hidden flex flex-col items-center space-y-4 py-4 bg-sky-800 hidden">
-        <a href="#about" class="hover:text-sky-300">About</a>
-        <a href="#contact" class="hover:text-sky-300">Contact</a>
-        <a href="#assessment" class="hover:text-sky-300">Assessment</a>
-    </div>
+{% block content %}
 
     <!-- Hero Section -->
     <section class="relative z-10 h-[calc(100vh-70px)] flex justify-between px-6 md:px-0 ">
@@ -138,30 +98,7 @@
         
        
     </div>
+{% endblock %}
 
 
 
-
-<!-- Footer Section -->
-<footer class="bg-black text-white py-3">
-    <div class="text-center">
-        <p>&copy; <span id="year"></span> All rights reserved | Made with ❤️ by Vikas</p>
-    </div>
-</footer>
-
-
-
-
-    <!-- JavaScript for Mobile Menu Toggle -->
-    
-    <script>
-        document.getElementById("year").textContent = new Date().getFullYear();
-        const menuButton = document.getElementById('menu-button');
-        const mobileMenu = document.getElementById('mobile-menu');
-
-        menuButton.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-        });
-    </script>
-</body>
-</html>

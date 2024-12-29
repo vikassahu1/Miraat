@@ -1,13 +1,16 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
-
-import { 
-    getAuth, 
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword 
+import {
+    initializeApp
+} from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
+import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    GoogleAuthProvider,
+    signInWithPopup
 } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js';
 
-//Base address will be changed once setup done .
-const BASE_URL = 'http://127.0.0.1:8000';
+
+
 
 // Initialize Firebase
 const firebaseConfig = {
@@ -20,30 +23,35 @@ const firebaseConfig = {
     measurementId: "G-QHL8SL2GBY"
 };
 
+
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const BASE_URL = 'http://127.0.0.1:8000';
 
 
 
 
+
+
+// Register with Email/Password
 async function register() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-    
+
     if (!email || !password) {
         alert("Please enter both email and password");
         return;
     }
-    
+
     if (password.length < 6) {
         alert("Password should be at least 6 characters long.");
         return;
-    }    
-    
+    }
+
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const token = await userCredential.user.getIdToken();
-        console.log("Generated Token:", token);  // Log token for debugging
         
         const response = await fetch(`${BASE_URL}/register-user/`, {
             method: 'POST',
@@ -54,21 +62,23 @@ async function register() {
         });
 
         const responseData = await response.json();
-        console.log("Server Response:", responseData);  // Log full server response
-
         if (response.ok) {
             alert("Registration successful!");
         } else {
             alert(`Registration failed: ${responseData.detail || 'Unknown error'}`);
         }
     } catch (error) {
-        console.error("Full Error Object:", error);
         alert(`Registration error: ${error.message}`);
     }
 }
 
 
 
+
+
+
+
+// Login with Email/Password
 async function login() {
     const email = document.getElementById("loginEmail").value;
     const password = document.getElementById("loginPassword").value;
@@ -76,12 +86,11 @@ async function login() {
     try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const token = await userCredential.user.getIdToken();
-
+        
         const response = await fetch(`${BASE_URL}/verify-token/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
             },
             body: JSON.stringify({ token })
         });
@@ -93,11 +102,45 @@ async function login() {
             alert("Error during login: " + data.detail);
         }
     } catch (error) {
-        console.error("Error during login:", error);
         alert("Error during login: " + error.message);
     }
 }
 
+
+
+
+
+
+// Google Login/Registration
+async function googleAuth() {
+    const provider = new GoogleAuthProvider();
+    try {
+        const result = await signInWithPopup(auth, provider);
+        const token = await result.user.getIdToken();
+        
+        const response = await fetch(`${BASE_URL}/verify-token/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            alert("Google Authentication successful!");
+        } else {
+            alert("Error during Google Authentication: " + data.detail);
+        }
+    } catch (error) {
+        alert("Google Authentication error: " + error.message);
+    }
+}
+
+
+
+
+
 window.register = register;
 window.login = login;
-
+window.googleAuth = googleAuth;

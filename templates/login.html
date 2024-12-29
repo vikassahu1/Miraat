@@ -3,48 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mental Health App</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Miraat-Login/Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="container mt-5">
-        <div class="row">
-            <!-- Register Form -->
-            <div class="col-md-6">
-                <h2>Register</h2>
-                <form id="registerForm">
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" required>
-                    </div>
-                    <button type="button" class="btn btn-primary" onclick="register()">Register</button>
-                </form>
-            </div>
+<body class="h-[100vh] flex flex-col justify-between">
 
-            <!-- Login Form -->
-            <div class="col-md-6">
-                <h2>Login</h2>
-                <form id="loginForm">
-                    <div class="mb-3">
-                        <label for="loginEmail" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="loginEmail" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="loginPassword" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="loginPassword" required>
-                    </div>
-                    <button type="button" class="btn btn-primary" onclick="login()">Login</button>
-                </form>
+    <!-- Full Page Background Pattern -->
+    <div class="absolute inset-0 -z-10 h-full w-full bg-white bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1.5px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:6rem_4rem]"></div>
+
+    <nav class="relative z-10 flex justify-between items-center h-[70px] px-10 md:px-15">
+        <div class="text-2xl font-bold font-serif rounded-md">
+            Miraat
+        </div>
+        <div class="space-x-9 text-lg font-semibold font-sans text-black hidden md:flex">
+            <a href="/assessment" class="hover:text-green-300">Assessment</a>
+            <a href="/assessment" class="hover:text-green-300">ChatBot</a>
+            <a href="#assessment" class="hover:text-green-300">Community</a>
+            <a href="/helplines" class="hover:text-green-300">Helplines</a>
+            <a href="#assessment" class="hover:text-green-300">About</a>
+            <a href="#assessment" class="hover:text-green-300">Contact</a>
+        </div>
+        <div class="space-x-4 hidden font-sans font-semibold md:flex">
+            <a href="/login" class="hover:text-sky-300 bg-green-300 text-lg rounded-full px-10 py-2">Login</a>
+        </div>
+        <div class="md:hidden">
+            <button id="menu-button" class="text-xl">&#9776;</button>
+        </div>
+    </nav>
+
+
+
+    <div class="flex-grow flex items-center justify-center px-4 sm:px-6 lg:px-8">
+        <!-- Login Form Container -->
+        <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg" id="loginContainer">
+            <div>
+                <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                    Sign in to your account
+                </h2>
             </div>
+            <form class="mt-8 space-y-6" id="loginForm">
+                <div class="rounded-md shadow-sm -space-y-px">
+                    <div>
+                        <label for="loginEmail" class="sr-only">Email address</label>
+                        <input id="loginEmail" name="email" type="email" required 
+                            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm" 
+                            placeholder="Email address">
+                    </div>
+                    <div>
+                        <label for="loginPassword" class="sr-only">Password</label>
+                        <input id="loginPassword" name="password" type="password" required 
+                            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm" 
+                            placeholder="Password">
+                    </div>
+                </div>
+                <div>
+                    <button type="button" onclick="login()" 
+                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Sign in
+                    </button>
+                    <button type="button" onclick="googleAuth()" 
+                        class="mt-3 group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        Continue with Google
+                    </button>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                    <a href="#" onclick="showRegisterForm()" class="font-medium text-green-600 hover:text-green-500">
+                        Register new account
+                    </a>
+                    <a href="#" class="font-medium text-green-600 hover:text-green-500">
+                        Forgot password?
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Register Form Container -->
+        <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg hidden" id="registerContainer">
+            <div>
+                <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                    Create your account
+                </h2>
+            </div>
+            <form class="mt-8 space-y-6" id="registerForm">
+                <div class="rounded-md shadow-sm -space-y-px">
+                    <div>
+                        <label for="email" class="sr-only">Email address</label>
+                        <input id="email" name="email" type="email" required 
+                            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm" 
+                            placeholder="Email address">
+                    </div>
+                    <div>
+                        <label for="password" class="sr-only">Password</label>
+                        <input id="password" name="password" type="password" required 
+                            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm" 
+                            placeholder="Password">
+                    </div>
+                </div>
+                <div>
+                    <button type="button" onclick="register()" 
+                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Register
+                    </button>
+                    <button type="button" onclick="googleAuth()" 
+                        class="mt-3 group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        Register with Google
+                    </button>
+                </div>
+                <div class="flex items-center justify-center text-sm">
+                    <a href="#" onclick="showLoginForm()" class="font-medium text-green-600 hover:text-green-500">
+                        Already have an account? Sign in
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
- <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 
-<script type="module" src="../static/register.js"></script>
+    <!-- Footer Section -->
+    <footer class="bg-black text-white py-3">
+        <div class="text-center">
+            <p>&copy; <span id="year"></span> All rights reserved | Made with ❤️ by Vikas</p>
+        </div>
+    </footer>
+
+
+    <!-- JavaScript for Mobile Menu Toggle -->
+    <script>
+        document.getElementById("year").textContent = new Date().getFullYear();
+        const menuButton = document.getElementById('menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        menuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+    </script>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script type="module" src="../static/register.js"></script>
+    <script>
+        function showRegisterForm() {
+            document.getElementById('loginContainer').classList.add('hidden');
+            document.getElementById('registerContainer').classList.remove('hidden');
+        }
+
+        function showLoginForm() {
+            document.getElementById('registerContainer').classList.add('hidden');
+            document.getElementById('loginContainer').classList.remove('hidden');
+        }
+    </script>
 </body>
 </html>
