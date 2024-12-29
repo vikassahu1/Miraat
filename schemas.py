@@ -22,3 +22,13 @@ class TokenRequest(BaseModel):
     token: str
     class Config:
         orm_mode = True
+
+
+class TokenRequestRegister(BaseModel):
+    token: str
+    name: str 
+    age: int
+    gender: str
+
+    class Config:
+        orm_mode = True

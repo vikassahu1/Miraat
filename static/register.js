@@ -38,6 +38,9 @@ const BASE_URL = 'http://127.0.0.1:8000';
 async function register() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
+    const name  = document.getElementById("name").value;
+    const age = document.getElementById("age").value;
+    const gender = document.getElementById("gender").value;
 
     if (!email || !password) {
         alert("Please enter both email and password");
@@ -46,6 +49,11 @@ async function register() {
 
     if (password.length < 6) {
         alert("Password should be at least 6 characters long.");
+        return;
+    }  
+
+    if (age < 1 || age > 120) {
+        alert("Age is not valid.");
         return;
     }
 
@@ -58,7 +66,7 @@ async function register() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ token })
+            body: JSON.stringify({ token, name, age, gender })
         });
 
         const responseData = await response.json();

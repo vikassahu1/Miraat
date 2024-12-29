@@ -22,7 +22,7 @@ import sys
 #imports that may be shifted
 from accessories.utils import load_json
 from accessories.logger import logging
-from schemas import TestRequest,TestAndAnswer,solRequest,TokenRequest,TextInput
+from schemas import TestRequest,TestAndAnswer,solRequest,TokenRequest,TextInput,TokenRequestRegister
 from Assessment.test_inference import get_inference
 
 
@@ -274,53 +274,58 @@ async def login(request: Request):
 
 
 
-
 @app.post("/verify-token/")
 async def verify_token(request: TokenRequest, db: Session = Depends(get_db)):
     try:
+        # Validate the token
+        if not request.token:
+            raise HTTPException(status_code=400, detail="Token is required.")
+
+        # Verify the Firebase token
         decoded_token = auth.verify_id_token(request.token)
         uid = decoded_token.get("uid")
         email = decoded_token.get("email")
 
-        # More detailed logging
-        print(f"UID: {uid}")
-        print(f"Email: {email}")
-        print(f"Full decoded token: {decoded_token}")
+        print(f"UID: {uid}, Email: {email}, Full Token: {decoded_token}")
 
-        # Explicit error handling
+        # Ensure essential details are present
         if not uid or not email:
-            raise ValueError("Missing UID or email in token")
+            raise ValueError("Invalid token. UID or email is missing.")
 
-        # User creation/verification logic
+        # Check if the user exists in the database
         user = db.query(User).filter(User.id == uid).first()
         if not user:
-            new_user = User(id=uid, email=email, name=decoded_token.get("name", ""))
-            db.add(new_user)
-            db.commit()
-            db.refresh(new_user)
-            return {"message": "New user created", "email": new_user.email}
+            return {"message": "User does not exist. Please register.", "email": email}
 
-        return {"message": "User verified", "email": user.email}
+        # Return success response
+        return {"message": "User verified successfully.", "email": user.email}
+    
+    except auth.InvalidIdTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token.")
+
     except Exception as e:
-        print(f"Detailed error during token verification: {e}")
-        raise HTTPException(status_code=401, detail=str(e))
-
+        print(f"Error during token verification: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
 
 
 @app.post("/register-user/")
-async def register_user(request: TokenRequest, db: Session = Depends(get_db)):
+async def register_user(request: TokenRequestRegister, db: Session = Depends(get_db)):
     try:
         token = request.token  # Extract token from JSON body
         decoded_token = auth.verify_id_token(token)
         uid = decoded_token["uid"]
         email = decoded_token["email"]
 
+        age = request.age
+        gender = request.gender
+        name = request.name
+
         # Check if user exists
         user = db.query(User).filter(User.id == uid).first()
         if not user:
-            new_user = User(id=uid, email=email, name=decoded_token.get("name", ""))
+            new_user = User(id=uid, email=email, name=name, age=age, gender=gender)
             db.add(new_user)
             db.commit()
             return {"message": "New user created", "email": new_user.email}
