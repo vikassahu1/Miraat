@@ -71,6 +71,10 @@ async function register() {
 
         const responseData = await response.json();
         if (response.ok) {
+
+            // local storage token set to check registration status
+            // localStorage.setItem('authToken', token);
+
             alert("Registration successful!");
         } else {
             alert(`Registration failed: ${responseData.detail || 'Unknown error'}`);
@@ -105,7 +109,15 @@ async function login() {
 
         const data = await response.json();
         if (response.ok) {
+
+            // local storage token set to check login status
+            localStorage.setItem('authToken', token);
             alert("Login successful!");
+
+            // On sucess =ful login the page will go back to the home.
+            // window.location.href = '/';
+
+            
         } else {
             alert("Error during login: " + data.detail);
         }
