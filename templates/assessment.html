@@ -33,14 +33,13 @@
 
 {% endblock %}
 
-{% block all_scripts%}
 
+
+{% block all_scripts%}
     <script>
         window.onload = function() {
             // Check if the token is present in localStorage
             const token = localStorage.getItem("authToken");
-
-
             if (!token) {
                 // If no token, redirect to login page
                 alert("You need to login to access this page");

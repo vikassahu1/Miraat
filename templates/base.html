@@ -11,11 +11,12 @@
 <body class="bg-sky-950 text-black font-sans relative">
 
     <!-- Full Page Background Pattern -->
-    
     <div class="absolute inset-0 -z-10 h-full w-full bg-white bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1.5px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:6rem_4rem]"></div>
     
+
+
     <!-- Main Content - Navbar and Hero Section -->
-    <nav class="relative z-10 flex justify-between items-center h-[70px] px-10 md:px-15 ">
+<nav class="relative z-10 flex justify-between items-center h-[70px] px-10 md:px-15 ">
         <div class="text-2xl font-bold font-serif rounded-md">
             Miraat
         </div>
@@ -33,7 +34,32 @@
 
         <!-- this will toggle to profile and login button  -->
         <div id="profile_login" class="space-x-4 hidden font-sans font-semibold md:flex">
-            <a href="/login" class="hover:text-sky-300 bg-green-300 text-lg rounded-full px-10 py-2">Login</a>
+
+            <!-- Before Login -->
+            <a id="login_button" href="/login" class="bg-green-300 hover:bg-green-200 text-lg rounded-full px-10 py-2">Login</a>
+
+
+            <!-- After Login -->
+            <div id="profileSection" class="hidden relative flex flex-col bg-green-300  text-base rounded-full px-10 py-2 cursor-pointer">
+                <div class="flex items-center space-x-2">
+                    <img id="profileIcon" class="w-8 h-8 rounded-full" src="../static/images/user.png" alt="Profile">
+                    <span id="profileName" class="font-light"> 
+                        <!-- Name of the user will be displayed here  -->
+                    </span>
+                </div>
+                <div id="dropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 z-20">
+                    <a class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                </div>
+            </div>
+
+
+            <script>
+                document.getElementById("profileSection").addEventListener("click", function() {
+                    document.getElementById("dropdownMenu").classList.toggle("hidden");
+                });
+            </script>
+
+
         </div>
 
 
@@ -42,7 +68,11 @@
         <div class="md:hidden">
             <button id="menu-button" class="text-xl">&#9776;</button>
         </div>
-    </nav>
+</nav>
+
+
+
+
 
 
 
@@ -56,8 +86,6 @@
 
 
 
-
-
 <!-- Footer Section -->
 <footer class="bg-black text-white py-3">
     <div class="text-center">
@@ -65,23 +93,77 @@
     </div>
 </footer>
 
-    <!-- JavaScript for Mobile Menu Toggle -->
-    
+
+
+
+
+    <!-- Specific JS for base page -->
+
     <script>
+        // This will clear the stored token 
+        // localStorage.clear();
+
+
+        // For the hamburger menu 
         document.getElementById("year").textContent = new Date().getFullYear();
         const menuButton = document.getElementById('menu-button');
         const mobileMenu = document.getElementById('mobile-menu');
-
         menuButton.addEventListener('click', () => {
             mobileMenu.classList.toggle('hidden');
         });
+
+
+
+    // For the profile dropdown
+    window.onload = async function() {
+        // TODO: Better security required, it is not good to store user token in local storage ############
+        
+        const BASE_URL = 'http://127.0.0.1:8000';
+        // Check if the token is present in localStorage
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+            console.log("No token found");
+        }
+        else{
+            console.log(token);
+
+            document.getElementById("login_button").classList.add("hidden");
+            document.getElementById("profileSection").classList.remove("hidden");
+
+            const response = await fetch(`${BASE_URL}/info_by_token/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token })
+        });
+
+        const data = await response.json();
+        const name  = data.name
+        document.getElementById("profileName").textContent = name;
+        console.log(name);
+
+
+
+    }};
+
+    // Logout logic 
+    document.getElementById("dropdownMenu").addEventListener("click", function(event) {
+                     localStorage.clear();
+                     window.location.href = "/";});
+
+
     </script>
 
 
 
-    {% block all_scripts%}
+
+    <!-- Specific scripts for the perticular page  -->
+    {% block all_scripts%} 
        <!-- all scripts will be placed here  -->
     {% endblock %}
+
+
 </body>
 </html>
 

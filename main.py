@@ -334,3 +334,41 @@ async def register_user(request: TokenRequestRegister, db: Session = Depends(get
     except Exception as e:
         print(f"Error during registration: {e}")
         raise HTTPException(status_code=400, detail=str(e))
+
+
+
+# INFO: keep the clock at manual 
+@app.post("/info_by_token/")
+async def info_by_token(request: TokenRequest, db: Session = Depends(get_db)):
+    try:
+        # Validate the token
+        if not request.token:
+            raise HTTPException(status_code=400, detail="Token is required.")
+
+        # Verify the Firebase token
+        decoded_token = auth.verify_id_token(request.token)
+        uid = decoded_token.get("uid")
+        email = decoded_token.get("email")
+
+        print(f"UID: {uid}, Email: {email}, Full Token: {decoded_token}")
+
+        # Retrieve user information from the database
+        user = db.query(User).filter(User.id == uid).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found.")
+
+        # Return user information as JSON
+        return {
+            "id": user.id,
+            "email": user.email,
+            "name": user.name,
+            "age": user.age,
+            "gender": user.gender
+        }
+    except Exception as e:
+        print(f"Error during token verification or user retrieval: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+        
+
