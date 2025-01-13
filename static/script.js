@@ -58,6 +58,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 solutionDiv.innerHTML = ""; // Clear previous test
 
                 try{
+
+                        
+
+                    // Getting items from the local Storage. 
+                    const local_username = localStorage.getItem('username') || 'not available';
+                    const local_age = parseInt(localStorage.getItem('age'), 10) || 0;
+                    const local_gender = localStorage.getItem('gender') || 'unknown';
+
+
+
+                    // Add this before your fetch call to debug the values
+                console.log('Local Storage Values:', {
+                    username: localStorage.getItem('username'),
+                    age: localStorage.getItem('age'),
+                    gender: localStorage.getItem('gender')
+                });
+
+                const requestData = {
+                    context: user_context,
+                    username: local_username,
+                    age: local_age,
+                    gender: local_gender
+                };
+                
+                console.log('Request Data:', requestData); // Add this to debug
+
+
+
+                    console.log('User Context:', user_context);
+                    
+                    if (!user_context || typeof user_context !== 'string') {
+                        throw new Error('Invalid user_context');
+                    }
+
+                    
+
                     const res = await fetch(`${BASE_URL}/get_solution_text/`, {
                         method: 'POST',
                         headers: { 
@@ -65,10 +101,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             'Accept': 'application/json'
                         },
                         body: JSON.stringify({
-                            context: user_context
+                            context: user_context,
+                            username: local_username,
+                            age: local_age,
+                            gender: local_gender,
                         }),
                     });
     
+
                     if (!res.ok) {
                         const errorText = await res.text();
                         throw new Error(`HTTP error! status: ${res.status}, message: ${errorText}`);
@@ -333,6 +373,13 @@ function buildDisorderList(disorder) {
     }
     return ul;
 }
+
+
+
+
+
+
+
 
 
 

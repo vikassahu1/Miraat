@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,EmailStr 
+# Emailstr validates the email.
 from typing import Dict
 
 class TestRequest(BaseModel):
@@ -13,6 +14,10 @@ class TestAndAnswer(BaseModel):
 
 class solRequest(BaseModel):
     context: str
+    username:str
+    age:int 
+    gender:str
+    
 
 class TextInput(BaseModel):
     text: str
@@ -24,6 +29,8 @@ class TokenRequest(BaseModel):
         orm_mode = True
 
 
+
+
 class TokenRequestRegister(BaseModel):
     token: str
     name: str 
@@ -32,3 +39,33 @@ class TokenRequestRegister(BaseModel):
 
     class Config:
         orm_mode = True
+
+   
+
+
+
+# For implementing the jwt part  
+class UserCreate(BaseModel):
+    name: str
+    age : int 
+    gender : str
+    email: EmailStr  # Validates proper email format
+    hashed_password: str
+    class Config:
+        orm_mode = True
+
+
+class UserResponse(BaseModel):
+    name: str
+    email: str
+    message: str
+
+    class Config:
+        orm_mode = True
+
+class Token(BaseModel):
+    access_token: str
+    username:str
+    age: int
+    gender: str
+    token_type: str

@@ -16,12 +16,12 @@ class Base(DeclarativeBase):
 
 # User model
 class User(Base):
-    __tablename__ = "users"
-    id = Column(String, primary_key=True)
-    name = Column(String, nullable=True)
+    __tablename__ = "user_info"
+    name = Column(String, primary_key=True)
     age = Column(Integer, nullable=True)
     gender = Column(String, nullable=True)
     email = Column(String, unique=True)
+    hashed_password = Column(String)
 
 
 

@@ -17,6 +17,8 @@ class LLMSetup:
         genai.configure(api_key=GOOGLE_API_KEY)
         self.model = genai.GenerativeModel('gemini-pro')
 
+
+
     def format_input(self, user_input: str) -> str:
         """
         Formats the input text using a template.
@@ -27,6 +29,7 @@ class LLMSetup:
             "Please provide a detailed, well-structured response."
         )
         return input_template.format(user_input=user_input)
+
 
 
     def format_to_text(self,text):
@@ -40,6 +43,7 @@ class LLMSetup:
         text = text.strip()
          
         return text
+
 
 
     def format_to_html(self, text: str) -> str:
@@ -65,8 +69,8 @@ class LLMSetup:
 
 
 
-
-    def get_result(self, user_text: str) -> str:
+    # Adding name, age and gender to the context. 
+    def get_result(self, user_text: str,name: str, age: int, gender: str) -> str:
         try:
             formatted_input = (
                 "Context: You are mental health assessment AI (your name is Mirat). "
@@ -76,6 +80,10 @@ class LLMSetup:
                 "Your task is to give a full systematic solution to the user based on the data given. "
                 "You may use the context of the text to make it more personalized.\n\n"
                 "Note: Its not two sided conversion so don't ask questions.\n\n"
+                "User Information:\n"
+                f"Name: {name}\n"
+                f"Age: {age}\n"
+                f"Gender: {gender}\n\n"
                 "Data:\n"
             )
 
@@ -99,9 +107,14 @@ class LLMSetup:
 
 
 
-
+# Note:
+# LLM part is perfectly working . 
 if __name__ == '__main__':
     llm = LLMSetup()
     user_text = "The user feels anxious about their exam results."
-    result = llm.get_result(user_text)
+    result = llm.get_result(user_text,"Vikas",22,"Male")
     print(result)
+
+
+
+

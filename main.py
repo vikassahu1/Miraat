@@ -1,5 +1,5 @@
-from fastapi import FastAPI,HTTPException,Depends,Request,BackgroundTasks
-from fastapi.responses import JSONResponse,HTMLResponse
+from fastapi import FastAPI,HTTPException,Depends,Request,BackgroundTasks,status
+from fastapi.responses import JSONResponse,HTMLResponse,RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
@@ -22,29 +22,62 @@ import sys
 #imports that may be shifted
 from accessories.utils import load_json
 from accessories.logger import logging
-from schemas import TestRequest,TestAndAnswer,solRequest,TokenRequest,TextInput,TokenRequestRegister
+from schemas import TestRequest,TestAndAnswer,solRequest,TokenRequest,TextInput,TokenRequestRegister,UserCreate ,UserResponse,Token
 from Assessment.test_inference import get_inference
 
 
 # Database imports 
 from database import User, Base, engine, SessionLocal
 from sqlalchemy.orm import Session 
-from firebase_admin import auth, credentials, initialize_app
 from sqlalchemy.exc import SQLAlchemyError
+
+# <----------------------------------------------------------------Authentication--------------------------------------------------->
+# Imports for registration and login using jwt tokens 
+from fastapi.security import OAuth2PasswordRequestForm,OAuth2PasswordBearer
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from datetime import datetime, timedelta
+# <--------------------------------------------------------------------------------------------------------------------------------->
 
 
 
 load_dotenv()
-
-
-app = FastAPI()
+app = FastAPI(title  = "Miraat")
 Base.metadata.create_all(bind=engine)
-
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
-cred = credentials.Certificate("miraat-54aac-firebase-adminsdk-9r6ms-cfe53c0902.json")
-initialize_app(cred)
 BASE_URL = os.getenv("BASE_URL")
+
+
+
+# <---------------------------------------------------------------- SECRET KEY ----------------------------------------------------->
+# Secret key for JWT signing
+SECRET_KEY = os.getenv("SECRET_KEY")
+os.environ["SECRET_KEY"] = SECRET_KEY 
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+# Password hashing
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# <--------------------------------------------------------------------------------------------------------------------------------->
+
+
+
+
+
+
+# TODO: To be shifted in utilities 
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+
+
+
 
 
 
@@ -72,6 +105,8 @@ app.add_middleware(
     allow_methods=["*"],  # Allow all HTTP methods
     allow_headers=["*"],  # Allow all headers
 )
+
+
 
 
 
@@ -187,9 +222,6 @@ async def get_questions(data: TestRequest):
 
 
 
-
-
-
 @app.post("/get_inference_from_test/")
 async def get_inference_from_test(request: TestAndAnswer):
     try:
@@ -222,12 +254,20 @@ async def get_inference_from_test(request: TestAndAnswer):
 
     
 @app.post("/get_solution_text/")
-async def get_solution_text(text: solRequest):
-    text = text.context
+async def get_solution_text(texti: solRequest):
+    
+    print(texti.dict())
+
+    text = texti.context
+    name = texti.username
+    age = texti.age
+    gender = texti.gender 
+    
     logging.info(text)
+
     try:
         set_up = LLMSetup()
-        solution_html = set_up.get_result(text)
+        solution_html = set_up.get_result(text,name,age,gender)
         logging.info(solution_html)
 
         return JSONResponse(
@@ -244,7 +284,7 @@ async def get_solution_text(text: solRequest):
 
 
 
-
+# <----------------------------------------------------------------------- Helpline --------------------------------------------------------------------------->
 @app.get("/helplines")
 async def get_helplines(request: Request):
     try:
@@ -259,13 +299,91 @@ async def get_helplines(request: Request):
 
     # Pass helpline data to the template
     return templates.TemplateResponse("helplines.html", {"request": request, "helplines": helplines})
+# <------------------------------------------------------------------------------------------------------------------------------------------------------------->
         
 
 
 
 
 
-# Login Systems 
+#<----------------------------------- Login related utility funtions --------------------------------------------------------------------> 
+def get_user_by_username(db: Session, username: str):
+    return db.query(User).filter(User.name == username).first()
+
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def create_user(db: Session, user: UserCreate):
+    # Hash the password before storing
+    hashed_password = pwd_context.hash(user.hashed_password)
+    
+    db_user = User(
+        name=user.name,
+        age=user.age,
+        gender = user.gender,
+        email=user.email,
+        hashed_password=hashed_password  # Use the hashed password
+    )
+    
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
+
+
+
+def authenticate_user(db: Session, username: str, password: str):
+    user = get_user_by_username(db, username)
+    if not user:
+        return False
+    if not verify_password(password, user.hashed_password):
+        return False
+    return user
+
+
+
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+
+
+
+# User authentication 
+
+async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+        
+    user = get_user_by_username(db, username)
+    if user is None:
+        raise credentials_exception
+    return user
+
+
+
+
+
+# <---------------------------------------------------------- login system ---------------------------------------------------------------------------------------->
+
+
 
 @app.get("/login")
 async def login(request: Request):
@@ -274,101 +392,61 @@ async def login(request: Request):
 
 
 
-@app.post("/verify-token/")
-async def verify_token(request: TokenRequest, db: Session = Depends(get_db)):
-    try:
-        # Validate the token
-        if not request.token:
-            raise HTTPException(status_code=400, detail="Token is required.")
 
-        # Verify the Firebase token
-        decoded_token = auth.verify_id_token(request.token)
-        uid = decoded_token.get("uid")
-        email = decoded_token.get("email")
 
-        print(f"UID: {uid}, Email: {email}, Full Token: {decoded_token}")
-
-        # Ensure essential details are present
-        if not uid or not email:
-            raise ValueError("Invalid token. UID or email is missing.")
-
-        # Check if the user exists in the database
-        user = db.query(User).filter(User.id == uid).first()
-        if not user:
-            return {"message": "User does not exist. Please register.", "email": email}
-
-        # Return success response
-        return {"message": "User verified successfully.", "email": user.email}
+@app.post("/register", response_model=UserResponse)
+def register(user: UserCreate, db: Session = Depends(get_db)):
+    # Check if username already exists
+    existing_user = get_user_by_username(db, user.name)
     
-    except auth.InvalidIdTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token.")
-
-    except Exception as e:
-        print(f"Error during token verification: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
-
-
-
-
-@app.post("/register-user/")
-async def register_user(request: TokenRequestRegister, db: Session = Depends(get_db)):
-    try:
-        token = request.token  # Extract token from JSON body
-        decoded_token = auth.verify_id_token(token)
-        uid = decoded_token["uid"]
-        email = decoded_token["email"]
-
-        age = request.age
-        gender = request.gender
-        name = request.name
-
-        # Check if user exists
-        user = db.query(User).filter(User.id == uid).first()
-        if not user:
-            new_user = User(id=uid, email=email, name=name, age=age, gender=gender)
-            db.add(new_user)
-            db.commit()
-            return {"message": "New user created", "email": new_user.email}
-
-        return {"message": "User already exists", "email": user.email}
-    except Exception as e:
-        print(f"Error during registration: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already exists",
+        )
+    
+    # Create new user
+    created_user = create_user(db, user)
+    
+    # Return response matching UserResponse model
+    return {
+        "name": created_user.name,  # Add this line
+        "email": created_user.email,
+        "message": "User registered successfully"
+    }
 
 
 
-# INFO: keep the clock at manual 
-@app.post("/info_by_token/")
-async def info_by_token(request: TokenRequest, db: Session = Depends(get_db)):
-    try:
-        # Validate the token
-        if not request.token:
-            raise HTTPException(status_code=400, detail="Token is required.")
-
-        # Verify the Firebase token
-        decoded_token = auth.verify_id_token(request.token)
-        uid = decoded_token.get("uid")
-        email = decoded_token.get("email")
-
-        print(f"UID: {uid}, Email: {email}, Full Token: {decoded_token}")
-
-        # Retrieve user information from the database
-        user = db.query(User).filter(User.id == uid).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found.")
-
-        # Return user information as JSON
-        return {
-            "id": user.id,
-            "email": user.email,
-            "name": user.name,
-            "age": user.age,
-            "gender": user.gender
-        }
-    except Exception as e:
-        print(f"Error during token verification or user retrieval: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
 
 
-        
 
+@app.post("/token", response_model=Token)
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = authenticate_user(db, form_data.username, form_data.password)  # Use username instead of name
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token = create_access_token(data={"sub": user.name})
+    return {"access_token": access_token,"username":user.name,"age":user.age,"gender":user.gender,"token_type": "bearer"}
+
+
+
+
+
+
+
+# Not being used. 
+@app.get("/dashboard")
+async def dashboard(request: Request, current_user: User = Depends(get_current_user)):
+    if current_user is None:
+        # Redirect to login page if the user is not authenticated
+        return RedirectResponse(url="/login", status_code=302)
+    
+    # If authenticated, render the dashboard
+    return templates.TemplateResponse("assessment.html", {
+        "request": request,
+        "username": current_user.name
+    })

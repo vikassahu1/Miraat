@@ -2,7 +2,6 @@ fastapi
 sqlalchemy 
 uvicorn
 pydantic 
-firebase-admin
 httpx
 python-dotenv
 transformers
@@ -16,5 +15,8 @@ sqlalchemy
 firebase-admin
 langchain-huggingface
 google-generativeai
+python-jose 
+passlib
+bcrypt
 
 # -e . 

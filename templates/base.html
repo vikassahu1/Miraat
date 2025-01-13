@@ -50,6 +50,10 @@
                 <div id="dropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 z-20">
                     <a class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
                 </div>
+
+
+                <!-- Script to display user name after login -->
+
             </div>
 
 
@@ -58,8 +62,6 @@
                     document.getElementById("dropdownMenu").classList.toggle("hidden");
                 });
             </script>
-
-
         </div>
 
 
@@ -100,61 +102,54 @@
     <!-- Specific JS for base page -->
 
     <script>
-        // This will clear the stored token 
-        // localStorage.clear();
+
+        // Add this function to your existing script or in a separate .js file
+function checkAndUpdateProfile() {
+    // Get elements
+    const profileLoginDiv = document.getElementById('profile_login');
+    const loginButton = document.getElementById('login_button');
+    const profileSection = document.getElementById('profileSection');
+    const profileName = document.getElementById('profileName');
+
+    // Get username from localStorage
+    const username = localStorage.getItem('username');
+
+    if (username) {
+        // Show profile_login div
+        profileLoginDiv.classList.remove('hidden');
+        // Hide login button
+        loginButton.classList.add('hidden');
+        // Show profile section
+        profileSection.classList.remove('hidden');
+        // Set username in profileName
+        profileName.textContent = username;
+    }
+}
+
+// Call the function when page loads
+document.addEventListener('DOMContentLoaded', checkAndUpdateProfile);
 
 
         // For the hamburger menu 
         document.getElementById("year").textContent = new Date().getFullYear();
         const menuButton = document.getElementById('menu-button');
         const mobileMenu = document.getElementById('mobile-menu');
+
         menuButton.addEventListener('click', () => {
             mobileMenu.classList.toggle('hidden');
         });
 
-
-
-    // For the profile dropdown
-    window.onload = async function() {
-        // TODO: Better security required, it is not good to store user token in local storage ############
-        
-        const BASE_URL = 'http://127.0.0.1:8000';
-        // Check if the token is present in localStorage
-        const token = localStorage.getItem("authToken");
-        if (!token) {
-            console.log("No token found");
-        }
-        else{
-            console.log(token);
-
-            document.getElementById("login_button").classList.add("hidden");
-            document.getElementById("profileSection").classList.remove("hidden");
-
-            const response = await fetch(`${BASE_URL}/info_by_token/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token })
-        });
-
-        const data = await response.json();
-        const name  = data.name
-        document.getElementById("profileName").textContent = name;
-        console.log(name);
-
-
-
-    }};
 
     // Logout logic 
     document.getElementById("dropdownMenu").addEventListener("click", function(event) {
                      localStorage.clear();
                      window.location.href = "/";});
 
-
     </script>
 
+
+
+    
 
 
 

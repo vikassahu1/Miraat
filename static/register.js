@@ -1,56 +1,26 @@
-import {
-    initializeApp
-} from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
-import {
-    getAuth,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    GoogleAuthProvider,
-    signInWithPopup
-} from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js';
-
-
-
-
-// Initialize Firebase
-const firebaseConfig = {
-    apiKey: "AIzaSyBZG00jAPncsR6BoXquQXI8-fM7qHGHC1c",
-    authDomain: "miraat-54aac.firebaseapp.com",
-    projectId: "miraat-54aac",
-    storageBucket: "miraat-54aac.firebasestorage.app",
-    messagingSenderId: "600850679847",
-    appId: "1:600850679847:web:4dd0593ae7c247087ce602",
-    measurementId: "G-QHL8SL2GBY"
-};
-
-
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const BASE_URL = 'http://127.0.0.1:8000';
 
 
 
-
-
-
 // Register with Email/Password
+// Register User
 async function register() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-    const name  = document.getElementById("name").value;
-    const age = document.getElementById("age").value;
+    const name = document.getElementById("name").value;
+    const age = parseInt(document.getElementById("age").value, 10);
     const gender = document.getElementById("gender").value;
 
-    if (!email || !password) {
-        alert("Please enter both email and password");
+    // Validation
+    if (!email || !password || !name || !age || !gender) {
+        alert("All fields are required.");
         return;
     }
 
     if (password.length < 6) {
         alert("Password should be at least 6 characters long.");
         return;
-    }  
+    }
 
     if (age < 1 || age > 120) {
         alert("Age is not valid.");
@@ -58,23 +28,23 @@ async function register() {
     }
 
     try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const token = await userCredential.user.getIdToken();
-        
-        const response = await fetch(`${BASE_URL}/register-user/`, {
+        // Make a POST request to the new /register endpoint
+        const response = await fetch(`${BASE_URL}/register`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ token, name, age, gender })
+            body: JSON.stringify({
+                email,
+                hashed_password: password, // Send password in hashed_password field
+                name,
+                age,
+                gender,
+            }),
         });
 
         const responseData = await response.json();
         if (response.ok) {
-
-            // local storage token set to check registration status
-            // localStorage.setItem('authToken', token);
-
             alert("Registration successful!");
         } else {
             alert(`Registration failed: ${responseData.detail || 'Unknown error'}`);
@@ -89,40 +59,48 @@ async function register() {
 
 
 
-
-// Login with Email/Password
+// Login User
 async function login() {
-    const email = document.getElementById("loginEmail").value;
+    const username = document.getElementById("loginEmail").value;
     const password = document.getElementById("loginPassword").value;
 
+    if (!username || !password) {
+        alert("Please enter both username and password.");
+        return;
+    }
+
     try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const token = await userCredential.user.getIdToken();
-        
-        const response = await fetch(`${BASE_URL}/verify-token/`, {
+        // Prepare form data for the /token endpoint
+        const formData = new URLSearchParams();
+        formData.append("username", username);
+        formData.append("password", password);
+
+        // Make a POST request to the new /token endpoint
+        const response = await fetch(`${BASE_URL}/token`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: JSON.stringify({ token })
+            body: formData.toString(),
         });
 
         const data = await response.json();
         if (response.ok) {
-
-            // local storage token set to check login status
-            localStorage.setItem('authToken', token);
-            alert("Login successful!");
-
-            // On sucess =ful login the page will go back to the home.
-            // window.location.href = '/';
-
+            // Save the token to localStorage or use it directly
+            localStorage.setItem("authToken", data.access_token);
+            localStorage.setItem("username", data.username);
+            localStorage.setItem("age",data.age);
+            localStorage.setItem("gender", data.gender);
             
+            alert("Login successful!");
+            
+
+            window.location.href = "/";
         } else {
-            alert("Error during login: " + data.detail);
+            alert(`Login failed: ${data.detail || 'Unknown error'}`);
         }
     } catch (error) {
-        alert("Error during login: " + error.message);
+        alert(`Error during login: ${error.message}`);
     }
 }
 
@@ -131,36 +109,7 @@ async function login() {
 
 
 
-// Google Login/Registration
-async function googleAuth() {
-    const provider = new GoogleAuthProvider();
-    try {
-        const result = await signInWithPopup(auth, provider);
-        const token = await result.user.getIdToken();
-        
-        const response = await fetch(`${BASE_URL}/verify-token/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ token })
-        });
 
-        const data = await response.json();
-        if (response.ok) {
-            alert("Google Authentication successful!");
-        } else {
-            alert("Error during Google Authentication: " + data.detail);
-        }
-    } catch (error) {
-        alert("Google Authentication error: " + error.message);
-    }
-}
-
-
-
-
-
+// Bind functions to global window object for accessibility
 window.register = register;
 window.login = login;
-window.googleAuth = googleAuth;
