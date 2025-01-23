@@ -31,6 +31,11 @@ from database import User, Base, engine, SessionLocal
 from sqlalchemy.orm import Session 
 from sqlalchemy.exc import SQLAlchemyError
 
+
+#chatbot imports
+from ChatBot.main import Chatbot
+
+
 # <----------------------------------------------------------------Authentication--------------------------------------------------->
 # Imports for registration and login using jwt tokens 
 from fastapi.security import OAuth2PasswordRequestForm,OAuth2PasswordBearer
@@ -121,7 +126,9 @@ async def assessment(request: Request):
     return templates.TemplateResponse("assessment.html", {"request": request})
 
 
-
+@app.get("/chatbot")
+async def assessment(request: Request):
+    return templates.TemplateResponse("chatbot.html", {"request": request})
 
 
 
@@ -450,3 +457,39 @@ async def dashboard(request: Request, current_user: User = Depends(get_current_u
         "request": request,
         "username": current_user.name
     })
+
+
+
+    # <-----------------------------------------------------------Chatbot Related endpoints and functions -------------------------------------------------------------------------------->
+
+
+chatbot  = None
+
+def initialize_chatbot(name: str):
+    """Initialize the chatbot instance."""
+    # Create a new chatbot instance
+    global chatbot
+    chatbot = Chatbot(name)
+    return chatbot
+
+
+    
+
+# -------------------------------Endpoints ----------------------------------------
+@app.get("/start_chatbot_session")
+async def start_chatbot_session():
+    user_name = "John Doe" 
+    chatbot = initialize_chatbot("John Doe")
+    return JSONResponse(content={"name": user_name})
+
+@app.post("/chatbot-response")
+async def chatbot_response(msg:TextInput):
+    temp  = chatbot.chat(msg.text)
+    return JSONResponse(content={"response": temp})
+
+
+    
+@app.post("/chatbot_response")
+async def chatbot_response(msg:TextInput):
+    temp  = chatbot.chat(msg.text)
+    return JSONResponse(content={"response": temp})

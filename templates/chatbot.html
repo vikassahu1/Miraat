@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Helplines{% endblock %}
+
+
+
+{% block content %}
+<!-- Chat Area -->
+<main id="chatbot_container" class="flex-1 bg-cyan-300 mx-auto h-[75vh] overflow-y-auto p-4 space-y-4 sm:w-[73vw]">
+
+
+
+    <!-- Example Messages -->
+    <div class="flex justify-start">
+        <div class="bg-white text-black p-3 rounded-lg shadow-md max-w-xs">
+            Hi! I'm Miraat. How can I assist you?
+        </div>
+    </div>
+
+
+    <div class="flex justify-end">
+        <div class="bg-indigo-700 p-3 rounded-lg shadow-md max-w-xs">
+            I need help managing stress.
+        </div>
+    </div>
+
+
+
+</main>
+
+
+
+
+<!-- Input Area -->
+<footer id="chatbot_container" class="bg-indigo-800 px-4 py-3 flex items-center gap-2 mx-auto sm:w-[73vw]">
+    <input 
+        id="input_container"
+        type="text" 
+        placeholder="Type your message..." 
+        class="w-full p-2 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+    <button 
+        id = "send_button"
+        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md transition duration-300">
+        Send
+    </button>
+</footer>
+
+
+{% endblock %}
+
+
+
+
+{% block all_scripts%}
+    <script src="../static/chatbot.js"></script>
+{% endblock %}
+
+
