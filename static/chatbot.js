@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Your code here
     document.getElementById("send_button").addEventListener("click", handleSend);
-    
+
     document.getElementById("input_container").addEventListener("keypress", function (event) {
       if (event.key === "Enter") {
         handleSend();
@@ -77,13 +77,14 @@ document.addEventListener("DOMContentLoaded", function () {
   
     // Function to append messages to the chatbot container
     function appendMessage(message, sender) {
+
       let chatbotContainer = document.getElementById("chatbot_container");
   
       // Create a message element as a DOM node
       let messageElement = document.createElement("div");
       messageElement.className = sender === "user" ? "flex justify-end" : "flex justify-start";
       messageElement.innerHTML = `
-        <div class="${sender === "user" ? "bg-indigo-700" : "bg-white text-black"} p-3 rounded-lg shadow-md max-w-xs">
+        <div class="${sender === "user" ? "bg-indigo-700" : "bg-white text-black"} p-3 rounded-lg shadow-md max-w-md">
           ${message}
         </div>
       `;
@@ -93,6 +94,14 @@ document.addEventListener("DOMContentLoaded", function () {
   
       // Scroll to the latest message
       chatbotContainer.scrollTop = chatbotContainer.scrollHeight;
+
     }
+
+
+
+
+
+    
+
   });
   

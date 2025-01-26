@@ -34,6 +34,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 #chatbot imports
 from ChatBot.main import Chatbot
+import re
 
 
 # <----------------------------------------------------------------Authentication--------------------------------------------------->
@@ -475,10 +476,18 @@ def initialize_chatbot(name:str,age,gender):
 
 
 
+def format_msg(input_text):
+    # Replace double asterisks for bold text
+    formatted_text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', input_text)
 
-def format_msg(msg: str) -> str:
-    return msg
+    # Replace single asterisks for italic text
+    formatted_text = re.sub(r'(?<!\*)\*(.*?)\*(?!\*)', r'<i>\1</i>', formatted_text)
 
+    # Format list items (new line for each list item)
+    formatted_text = re.sub(r'(\d+\.\s)', r'<br>\1', formatted_text)  # For numbered lists
+    formatted_text = re.sub(r'(\*\s)', r'<br>\1', formatted_text)      # For bullet points
+
+    return formatted_text
     
 
 # -------------------------------------------------------------Endpoints---------------------------------------------------------------------------------------------------------
