@@ -1,11 +1,15 @@
 document.addEventListener("DOMContentLoaded", function () {
+    let name = localStorage.getItem("username");
+    let age = localStorage.getItem("age");
+    let gender = localStorage.getItem("gender");
 
-
-    // Fetch session data and user name on page load
+    // Fetch session data and user name on page load (Sending token to backend to get Name and to maintain context)
   fetch("/start_chatbot_session", {
-    method: "GET",
+    method: "POST",
     headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name:name,age:age,gender:gender }),
   })
+  
     .then((response) => {
       if (!response.ok) throw new Error("Failed to start session");
       return response.json();
@@ -24,6 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Your code here
     document.getElementById("send_button").addEventListener("click", handleSend);
+    
     document.getElementById("input_container").addEventListener("keypress", function (event) {
       if (event.key === "Enter") {
         handleSend();

@@ -69,3 +69,9 @@ class Token(BaseModel):
     age: int
     gender: str
     token_type: str
+
+
+class UserInfo(BaseModel):
+    name: str
+    age: int
+    gender: str

@@ -12,9 +12,11 @@ load_dotenv()
 warnings.filterwarnings("ignore")
 
 class Chatbot:
-    def __init__(self, session_id):
+    def __init__(self, session_id, age, gender):
         self.session_id = session_id
         self.history = self.get_session_history(session_id)
+        self.age = age
+        self.gender = gender
 
         # Set environment variables
         os.environ["LANGCHAIN_TRACING_V2"] = os.getenv("LANGCHAIN_TRACING_V2")
@@ -32,8 +34,8 @@ class Chatbot:
         )
 
         # Define the system message
-        SYSTEM_MESSAGE = """You are Miraat, a mental health assistant chatbot. Your role is to be a supportive friend and guide, 
-        offering compassionate, helpful responses. You should maintain a friendly and empathetic tone while assisting the user."""
+        SYSTEM_MESSAGE = f"""You are Miraat, a mental health assistant chatbot. Your role is to be a supportive friend and guide, 
+        offering compassionate, helpful responses. You should maintain a friendly and empathetic tone while assisting the user. Some user information for context: Username-{self.session_id}, Age-{self.age}, Gender-{self.gender}"""
 
         # Define the prompt
         self.prompt = ChatPromptTemplate.from_messages([
@@ -104,7 +106,7 @@ class Chatbot:
 if __name__ == "__main__":
     try:
         # Create a chatbot instance with a session ID
-        bot = Chatbot("user123")
+        bot = Chatbot("user123",12,"male")
         print("Miraat Mental Health Assistant (Type 'exit' to end the conversation)")
         print("-" * 50)
         

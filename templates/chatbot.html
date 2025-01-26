@@ -52,6 +52,25 @@
 
 
 {% block all_scripts%}
+
+    <!-- Page can be accesses only when logged in -->
+    <script>
+        window.onload = function() {
+            // Check if the token is present in localStorage
+            const token = localStorage.getItem("authToken");
+            if (!token) {
+                // If no token, redirect to login page
+                alert("You need to login to access this page");
+                window.location.href = '/login';
+            }
+            else{
+                console.log(token);
+            }
+        };
+    </script>
+
+
+
     <script src="../static/chatbot.js"></script>
 {% endblock %}
 

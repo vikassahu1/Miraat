@@ -22,7 +22,7 @@ import sys
 #imports that may be shifted
 from accessories.utils import load_json
 from accessories.logger import logging
-from schemas import TestRequest,TestAndAnswer,solRequest,TokenRequest,TextInput,TokenRequestRegister,UserCreate ,UserResponse,Token
+from schemas import TestRequest,TestAndAnswer,solRequest,TokenRequest,TextInput,TokenRequestRegister,UserCreate ,UserResponse,Token, UserInfo
 from Assessment.test_inference import get_inference
 
 
@@ -465,22 +465,33 @@ async def dashboard(request: Request, current_user: User = Depends(get_current_u
 
 chatbot  = None
 
-def initialize_chatbot(name: str):
+def initialize_chatbot(name:str,age,gender):
     """Initialize the chatbot instance."""
-    # Create a new chatbot instance
+    # Create a new chatbot instanc
+
     global chatbot
-    chatbot = Chatbot(name)
+    chatbot = Chatbot(name,age,gender)
     return chatbot
 
 
+
+
+def format_msg(msg: str) -> str:
+    return msg
+
     
 
-# -------------------------------Endpoints ----------------------------------------
-@app.get("/start_chatbot_session")
-async def start_chatbot_session():
-    user_name = "John Doe" 
-    chatbot = initialize_chatbot("John Doe")
-    return JSONResponse(content={"name": user_name})
+# -------------------------------------------------------------Endpoints---------------------------------------------------------------------------------------------------------
+@app.post("/start_chatbot_session")
+async def start_chatbot_session(info: UserInfo):
+    name = info.name
+    age = info.age
+    gender = info.gender
+    chatbot = initialize_chatbot(name,age,gender)
+    return JSONResponse(content={"name": name})
+
+
+
 
 @app.post("/chatbot-response")
 async def chatbot_response(msg:TextInput):
@@ -491,5 +502,5 @@ async def chatbot_response(msg:TextInput):
     
 @app.post("/chatbot_response")
 async def chatbot_response(msg:TextInput):
-    temp  = chatbot.chat(msg.text)
+    temp  = format_msg(chatbot.chat(msg.text))
     return JSONResponse(content={"response": temp})
