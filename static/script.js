@@ -207,10 +207,6 @@ async function processDisorders(disorder) {
             }
         }
     }
-
-
-
-
 }
 
 
@@ -229,6 +225,7 @@ async function renderfunction(subcategory,test, list_of_questions) {
 
         const form = document.createElement('form');
         form.id = 'dynamicTestForm';
+        form.className = 'space-y-6 flex flex-col'; 
 
         for (const obj of list_of_questions) {
             const question_id = obj.question_id;
@@ -237,10 +234,11 @@ async function renderfunction(subcategory,test, list_of_questions) {
 
             // Create a wrapper for the question
             const questionWrapper = document.createElement('div');
-            questionWrapper.className = 'question-item';
+            questionWrapper.className = 'p-4 bg-gray-100 rounded-lg shadow-sm mb-4 question-item';
 
             const questionText = document.createElement('p');
             questionText.textContent = `${question_id}. ${question}`;
+            questionWrapper.className = 'p-4 bg-gray-100 rounded-lg shadow-sm mb-4 question-item w-full';
             questionWrapper.appendChild(questionText);
 
 
@@ -249,17 +247,21 @@ async function renderfunction(subcategory,test, list_of_questions) {
             let counter = 1;
             options.forEach(({ option_id, text }) => {
                 const optionWrapper = document.createElement('div');
+                optionWrapper.className = 'flex items-center mb-2 pl-4'; // Added left padding
+
 
                 const input = document.createElement('input');
                 input.type = 'radio';
                 input.name = `${question_id}`;
                 input.value = `${counter}`;
                 input.id = `question_${question_id}_option_${option_id}`;
+                input.className = 'mr-2'; // Add spacing between radio button and label
+
 
                 const label = document.createElement('label');
                 label.htmlFor = input.id;
                 label.textContent = text;
-
+                label.className = 'text-gray-700 text-base ml-2'; // Added label styling
                 optionWrapper.appendChild(input);
                 optionWrapper.appendChild(label);
                 questionWrapper.appendChild(optionWrapper);
@@ -269,13 +271,20 @@ async function renderfunction(subcategory,test, list_of_questions) {
             form.appendChild(questionWrapper);
         }
 
-
+        // For submit button
+        const buttonWrapper = document.createElement('div');
+        buttonWrapper.className = 'pt-6 w-full';
         
         // Add a submit button to the form
         const submitButton = document.createElement('button');
         submitButton.type = 'submit';
         submitButton.textContent = 'Submit Answers';
-        form.appendChild(submitButton);
+        submitButton.className = 'bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50';
+
+
+        buttonWrapper.appendChild(submitButton);
+        form.appendChild(buttonWrapper);
+
 
         // Append the form to the resultDiv
         resultDiv.appendChild(form);
@@ -331,6 +340,11 @@ async function renderfunction(subcategory,test, list_of_questions) {
         });
     });
 }
+
+
+
+
+
 
 
 

@@ -1,6 +1,7 @@
 from pydantic import BaseModel,EmailStr 
 # Emailstr validates the email.
 from typing import Dict
+from datetime import datetime
 
 class TestRequest(BaseModel):
     disorder_name: str
@@ -75,3 +76,16 @@ class UserInfo(BaseModel):
     name: str
     age: int
     gender: str
+
+
+
+# Test related models 
+
+class TestHistoryResponse(BaseModel):
+    test_id: int
+    date: datetime
+    userinput: str
+    response: str
+
+    class Config:
+        orm_mode = True

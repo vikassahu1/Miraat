@@ -1,0 +1,102 @@
+{% extends "base.html" %} 
+
+{% block title %}Test History{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold text-center">Test History</h1>
+    <div class="h-1 w-16 bg-green-400 mx-auto my-4"></div>
+    
+    <div id="historyTable" class="max-w-4xl mx-auto">
+        <p class="text-gray-600 text-center">Loading test history...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block all_scripts %}
+<script>
+    // Make deleteTest globally accessible
+    window.deleteTest = async function(testId) {
+        if (!confirm('Are you sure you want to delete this test?')) return;
+        try {
+            const response = await fetch(`/delete-test?test_id=${testId}&user_name=${username}`, {
+                method: 'DELETE',
+            });
+            if (!response.ok) throw new Error('Failed to delete test');
+            fetchTestHistory();
+        } catch (error) {
+            console.error(error);
+            alert('Error deleting test.');
+        }
+    };
+
+    // Rest of your existing script
+    const username = localStorage.getItem("username");
+    
+    if (!username) {
+        alert("User not logged in. Redirecting to login...");
+        window.location.href = "/login";
+    } else {
+        fetchTestHistory();
+    }
+
+    async function fetchTestHistory() {
+        try {
+            const response = await fetch(`/test-history?user_name=${username}`);
+            if (!response.ok) throw new Error("Failed to fetch test history");
+            
+            const data = await response.json();
+            renderTestHistory(data);
+        } catch (error) {
+            console.error(error);
+            document.getElementById("historyTable").innerHTML = 
+                '<p class="text-red-500 text-center">Error loading test history.</p>';
+        }
+    }
+
+    function renderTestHistory(data) {
+        const historyTable = document.getElementById("historyTable");
+        
+        if (data.length === 0) {
+            historyTable.innerHTML = '<p class="text-gray-500 text-center">No test history found.</p>';
+            return;
+        }
+
+        const tableHTML = `
+            <div class="grid gap-6 bg-gray-50 p-6 rounded-lg">
+                ${data.map(test => `
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow overflow-hidden">
+                        <div class="p-4">
+                            <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-start">
+                                <div class="space-y-1 min-w-0">
+                                    <div class="flex items-center">
+                                        <span class="text-xs font-medium text-gray-500 w-20">Test ID:</span>
+                                        <span class="text-sm text-gray-700 truncate">${test.test_id}</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="text-xs font-medium text-gray-500 w-20">Date:</span>
+                                        <span class="text-sm text-gray-700">${new Date(test.date).toLocaleString()}</span>
+                                    </div>
+                                </div>
+                                <div class="flex justify-end md:relative">
+                                    <button onclick="deleteTest('${test.test_id}')" 
+                                            class="text-sm px-3 py-1.5 bg-red-500 text-white rounded hover:bg-red-600 transition-colors font-medium shadow-sm flex-shrink-0">
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mt-4 space-y-2">
+                                <div class="text-xs font-medium text-gray-500">User Input</div>
+                                <div class="text-sm text-gray-700 bg-gray-50 rounded p-2">${test.userinput}</div>
+                                <div class="text-xs font-medium text-gray-500 mt-3">Response</div>
+                                <div class="text-sm text-gray-700 bg-gray-50 rounded p-2">${test.response}</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>`;
+            
+        historyTable.innerHTML = tableHTML;
+    }
+</script>
+{% endblock %}

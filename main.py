@@ -2,6 +2,7 @@ from fastapi import FastAPI,HTTPException,Depends,Request,BackgroundTasks,status
 from fastapi.responses import JSONResponse,HTMLResponse,RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from datetime import datetime  
 
 
 
@@ -13,7 +14,7 @@ import asyncio
 import httpx
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Dict
+from typing import Dict,List
 import os
 import json
 import sys
@@ -22,12 +23,12 @@ import sys
 #imports that may be shifted
 from accessories.utils import load_json
 from accessories.logger import logging
-from schemas import TestRequest,TestAndAnswer,solRequest,TokenRequest,TextInput,TokenRequestRegister,UserCreate ,UserResponse,Token, UserInfo
+from schemas import TestRequest,TestAndAnswer,solRequest,TokenRequest,TextInput,TokenRequestRegister,UserCreate ,UserResponse,Token, UserInfo, TestHistoryResponse
 from Assessment.test_inference import get_inference
 
 
 # Database imports 
-from database import User, Base, engine, SessionLocal
+from database import User, Base, engine, SessionLocal, TestHistory
 from sqlalchemy.orm import Session 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -230,6 +231,8 @@ async def get_questions(data: TestRequest):
 
 
 
+
+
 @app.post("/get_inference_from_test/")
 async def get_inference_from_test(request: TestAndAnswer):
     try:
@@ -256,13 +259,33 @@ async def get_inference_from_test(request: TestAndAnswer):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ---------------------------------------------------------Storing the test in the database-------------------------------------------------------------- 
 
-    
 
+def store(user_name: str, userinput: str, response: str, db: Session):
+    try:
+        new_entry = TestHistory(
+            user_name=user_name,
+            userinput=userinput,
+            response=response
+        )
+        
+        db.add(new_entry)
+        db.commit()
+        db.refresh(new_entry)
+        print(f"Stored entry ID: {new_entry.test_id}")  # Verify ID generation
+        logging.info(f"Stored entry ID: {new_entry.test_id}")  # Verify ID generation
+        return new_entry
+        
+    except Exception as e:
+        logging.error(f"Storage error: {str(e)}", exc_info=True)
+        db.rollback()
+        raise
 
+# -------------------------------------------------------------------------------------------------------------------------------------------------------
     
 @app.post("/get_solution_text/")
-async def get_solution_text(texti: solRequest):
+async def get_solution_text(texti: solRequest, db: Session = Depends(get_db)):
     
     print(texti.dict())
 
@@ -273,19 +296,29 @@ async def get_solution_text(texti: solRequest):
     
     logging.info(text)
 
+    
+
     try:
         set_up = LLMSetup()
-        solution_html = set_up.get_result(text,name,age,gender)
-        logging.info(solution_html)
+        solution_html = set_up.get_result(text, name, age, gender)
+        logging.info(f"Generated solution: {solution_html}")
+
+        try:
+            store(name, text, solution_html,db)
+        except Exception as store_error:
+            # Handle storage failure specifically
+            logging.error(f"Storage failed: {store_error}", exc_info=True)
+            # Consider adding retry logic here
 
         return JSONResponse(
-            content={
-                "solution_text": solution_html
-            }
+            content={"solution_text": solution_html}
         )
-    except Exception as e:
-        print(f"Error in get_solution_text: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+
+    except Exception as main_error:
+        logging.critical(f"Main process failed: {main_error}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Processing error: {str(main_error)}")
 
 
 
@@ -314,7 +347,7 @@ async def get_helplines(request: Request):
 
 
 
-#<----------------------------------- Login related utility funtions --------------------------------------------------------------------> 
+#<----------------------------------------------------------- Login related utility funtions --------------------------------------------------------------------> 
 def get_user_by_username(db: Session, username: str):
     return db.query(User).filter(User.name == username).first()
 
@@ -461,7 +494,7 @@ async def dashboard(request: Request, current_user: User = Depends(get_current_u
 
 
 
-    # <-----------------------------------------------------------Chatbot Related endpoints and functions -------------------------------------------------------------------------------->
+    # <--------------------------------------------------------------  Chatbot Related endpoints and functions -------------------------------------------------------------------------------->
 
 
 chatbot  = None
@@ -488,9 +521,9 @@ def format_msg(input_text):
     formatted_text = re.sub(r'(\*\s)', r'<br>\1', formatted_text)      # For bullet points
 
     return formatted_text
-    
 
-# -------------------------------------------------------------Endpoints---------------------------------------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------- Endpoints ---------------------------------------------------------------------------------------------------------
 @app.post("/start_chatbot_session")
 async def start_chatbot_session(info: UserInfo):
     name = info.name
@@ -499,17 +532,31 @@ async def start_chatbot_session(info: UserInfo):
     chatbot = initialize_chatbot(name,age,gender)
     return JSONResponse(content={"name": name})
 
-
-
-
-@app.post("/chatbot-response")
-async def chatbot_response(msg:TextInput):
-    temp  = chatbot.chat(msg.text)
-    return JSONResponse(content={"response": temp})
-
-
-    
+ 
 @app.post("/chatbot_response")
 async def chatbot_response(msg:TextInput):
     temp  = format_msg(chatbot.chat(msg.text))
     return JSONResponse(content={"response": temp})
+
+
+
+
+
+
+
+# <----------------------------------------------------------------------------  History Section ------------------------------------------------------------------------------------------------------------------->
+
+
+@app.get("/history")
+async def assessment(request: Request):
+    return templates.TemplateResponse("history.html", {"request": request})
+
+
+
+@app.get("/test-history", response_model=List[TestHistoryResponse])
+def get_test_history(user_name: str, db: Session = Depends(get_db)):
+    # Fetch test history for the given username
+    test_history = db.query(TestHistory).filter(TestHistory.user_name == user_name).order_by(TestHistory.date.desc()).all()
+    if not test_history:
+        raise HTTPException(status_code=404, detail="No test history found")
+    return test_history
