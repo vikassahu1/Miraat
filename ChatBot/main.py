@@ -27,7 +27,7 @@ class Chatbot:
 
         # Initialize the model
         self.model = ChatGoogleGenerativeAI(
-            model="gemini-pro",
+            model="gemini-1.5-pro",
             convert_system_message_to_human=True,
             temperature=0.7,
             max_output_tokens=2048

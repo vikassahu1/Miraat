@@ -560,3 +560,6 @@ def get_test_history(user_name: str, db: Session = Depends(get_db)):
     if not test_history:
         raise HTTPException(status_code=404, detail="No test history found")
     return test_history
+ 
+
+#  <----------------------------------------------------------------------------------------------------------------------  Community Section  ---------------------------------------------------------------------------------------->
