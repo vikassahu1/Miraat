@@ -15,7 +15,7 @@ os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 class LLMSetup:
     def __init__(self):
         genai.configure(api_key=GOOGLE_API_KEY)
-        self.model = genai.GenerativeModel('gemini-pro')
+        self.model = genai.GenerativeModel('gemini-1.5-flash')
 
 
 
