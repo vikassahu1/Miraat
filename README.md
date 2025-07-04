@@ -9,7 +9,6 @@
 <p align="center">
  <img src="miraat-home.png" alt="Miraat Application Screenshot" width="800"/>
 </p>
-![Uploading image.png…]()
 
 
 ## 📖 About The Project
