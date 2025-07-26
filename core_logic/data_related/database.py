@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, Column, String, Integer,DateTime
 from sqlalchemy.orm import sessionmaker,DeclarativeBase
 from datetime import datetime  
 # Database URL - Update these credentials to match your PostgreSQL setup
-DATABASE_URL = "postgresql://postgres:postgresvikas@localhost:5432/miraat"  # Changed 'user' to 'postgres'
+DATABASE_URL = "postgresql://postgres:postgresvikas@localhost:5432/miraat"  
 
 # Create engine
 engine = create_engine(DATABASE_URL,echo=True)

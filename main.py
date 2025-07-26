@@ -23,12 +23,12 @@ import sys
 #imports that may be shifted
 from accessories.utils import load_json
 from accessories.logger import logging
-from schemas import TestRequest,TestAndAnswer,solRequest,TokenRequest,TextInput,TokenRequestRegister,UserCreate ,UserResponse,Token, UserInfo, TestHistoryResponse
+from core_logic.data_related.schemas import TestRequest,TestAndAnswer,solRequest,TokenRequest,TextInput,TokenRequestRegister,UserCreate ,UserResponse,Token, UserInfo, TestHistoryResponse
 from Assessment.test_inference import get_inference
 
 
 # Database imports 
-from database import User, Base, engine, SessionLocal, TestHistory
+from core_logic.data_related.database import User, Base, engine, SessionLocal, TestHistory
 from sqlalchemy.orm import Session 
 from sqlalchemy.exc import SQLAlchemyError
 
