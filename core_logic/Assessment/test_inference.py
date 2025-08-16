@@ -1,8 +1,8 @@
-from schemas import TestRequest,TestAndAnswer
+from core_logic.data_related.schemas import TestRequest,TestAndAnswer
 from typing import Dict
-from accessories.exception import CustomException
+from core_logic.accessories.exception import CustomException
 import sys
-from accessories.logger import logging
+from core_logic.accessories.logger import logging
 
 
 

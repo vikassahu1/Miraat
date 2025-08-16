@@ -6,9 +6,9 @@ from datetime import datetime
 
 
 
-from Assessment.main import Assess
-from accessories.exception import CustomException
-from llm_setup.main import LLMSetup
+from core_logic.Assessment.main import Assess
+from core_logic.accessories.exception import CustomException
+from core_logic.llm_setup.main import LLMSetup
 from pydantic import BaseModel
 import asyncio
 import httpx
@@ -21,10 +21,10 @@ import sys
 
 
 #imports that may be shifted
-from accessories.utils import load_json
-from accessories.logger import logging
+from core_logic.accessories.utils import load_json
+from core_logic.accessories.logger import logging
 from core_logic.data_related.schemas import TestRequest,TestAndAnswer,solRequest,TokenRequest,TextInput,TokenRequestRegister,UserCreate ,UserResponse,Token, UserInfo, TestHistoryResponse
-from Assessment.test_inference import get_inference
+from core_logic.Assessment.test_inference import get_inference
 
 
 # Database imports 
@@ -34,7 +34,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 
 #chatbot imports
-from ChatBot.main import Chatbot
+from core_logic.ChatBot.main import Chatbot
 import re
 
 
@@ -152,7 +152,7 @@ async def take_input(request: Request,  input: TextInput):
             return JSONResponse(content={"disorder": "no disorder"})  
 
         disorders = testing.dignose()
-        file_path = os.path.join(os.getcwd(), 'Assessment', 'mapping.json')
+        file_path = os.path.join(os.getcwd(), 'core_logic','Assessment', 'mapping.json')
         with open(file_path, 'r') as file:
             mapping_data = json.load(file)
         res_file = {}
@@ -179,7 +179,7 @@ async def get_questions(data: TestRequest):
         test_name = data.test
 
         # Load the abbreviation mapping file
-        file_path = os.path.join(os.getcwd(), 'Assessment', 'abbreviation_map.json')
+        file_path = os.path.join(os.getcwd(),'core_logic','Assessment', 'abbreviation_map.json')
         with open(file_path, 'r') as file:
             mapping_data = json.load(file)
 
@@ -194,7 +194,7 @@ async def get_questions(data: TestRequest):
         test_name = mapping_data[test_name]
 
         # Load the test data file
-        file_path = os.path.join(os.getcwd(), 'Assessment', 'test_data.json')
+        file_path = os.path.join(os.getcwd(),'core_logic' 'Assessment', 'test_data.json')
         with open(file_path, 'r') as file:
             test_data = json.load(file)
 
@@ -329,7 +329,7 @@ async def get_solution_text(texti: solRequest, db: Session = Depends(get_db)):
 @app.get("/helplines")
 async def get_helplines(request: Request):
     try:
-        file_path = os.path.join(os.getcwd(), 'accessories', 'helplines.json')
+        file_path = os.path.join(os.getcwd(), 'core_logic','accessories', 'helplines.json')
         with open(file_path, 'r') as file:
             data = json.load(file)
 

@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # Your FastAPI backend service
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      # This URL is now constructed from your credentials.
+      # Notice the hostname is 'db', not 'localhost'.
+      - DATABASE_URL=postgresql://postgres:postgresvikas@db:5432/miraat
+    depends_on:
+      - db
+    # The --reload command for easy development.
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # The PostgreSQL database service
+  db:
+    image: postgres:13-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      # These credentials MUST EXACTLY MATCH the DATABASE_URL above.
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgresvikas
+      - POSTGRES_DB=miraat
+
+volumes:
+  postgres_data:

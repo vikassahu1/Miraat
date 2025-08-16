@@ -1,7 +1,7 @@
 import google.generativeai as genai
 from dotenv import load_dotenv
-from accessories.exception import CustomException
-from accessories.logger import logging
+from core_logic.accessories.exception import CustomException
+from core_logic.accessories.logger import logging
 import sys
 import os
 import re
@@ -15,7 +15,7 @@ os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 class LLMSetup:
     def __init__(self):
         genai.configure(api_key=GOOGLE_API_KEY)
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.0-flash')
 
 
 
