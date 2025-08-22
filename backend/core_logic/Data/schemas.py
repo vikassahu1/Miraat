@@ -27,7 +27,7 @@ class TextInput(BaseModel):
 class TokenRequest(BaseModel):
     token: str
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 
@@ -39,10 +39,7 @@ class TokenRequestRegister(BaseModel):
     gender: str
 
     class Config:
-        orm_mode = True
-
-   
-
+        from_attributes = True
 
 
 # For implementing the jwt part  
@@ -53,7 +50,7 @@ class UserCreate(BaseModel):
     email: EmailStr  # Validates proper email format
     hashed_password: str
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserResponse(BaseModel):
@@ -62,7 +59,7 @@ class UserResponse(BaseModel):
     message: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Token(BaseModel):
     access_token: str
@@ -88,4 +85,4 @@ class TestHistoryResponse(BaseModel):
     response: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True

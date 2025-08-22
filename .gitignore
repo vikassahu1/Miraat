@@ -6,6 +6,19 @@ backend/__pycache__/
 backend/miraat.egg-info/
 backend/instance/
 
+# Ignore all virtual environments
+venv/
+
+# Ignore all Python cache folders
+__pycache__/
+
+# Ignore egg-info metadata
+*.egg-info/
+
+# Ignore instance folders
+instance/
+
+
 
 frontend/node_modules/
 frontend/build/
