@@ -1,7 +1,7 @@
 import google.generativeai as genai
 from dotenv import load_dotenv
-from core_logic.accessories.exception import CustomException
-from core_logic.accessories.logger import logging
+from core_logic.Accessories.exception import CustomException
+from core_logic.Accessories.logger import logging
 import sys
 import os
 import re

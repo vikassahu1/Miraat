@@ -1,8 +1,21 @@
-venv
+.idea/
+.vscode/
+
+backend/venv/
+backend/__pycache__/
+backend/miraat.egg-info/
+backend/instance/
+
+
+frontend/node_modules/
+frontend/build/
+
+
 .env
-__pycache__/
-miraat.egg-info
-build/
+
+# Logs
 logs/
-node_modules/
-miraat-54aac-firebase-adminsdk-9r6ms-cfe53c0902.json
+**/logs/
+*.log
+**/*.log
+

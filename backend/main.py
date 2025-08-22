@@ -7,8 +7,8 @@ from datetime import datetime
 
 
 from core_logic.Assessment.main import Assess
-from core_logic.accessories.exception import CustomException
-from core_logic.llm_setup.main import LLMSetup
+from core_logic.Accessories.exception import CustomException
+from core_logic.LLM.main import LLMSetup
 from pydantic import BaseModel
 import asyncio
 import httpx
@@ -21,14 +21,14 @@ import sys
 
 
 #imports that may be shifted
-from core_logic.accessories.utils import load_json
-from core_logic.accessories.logger import logging
-from core_logic.data_related.schemas import TestRequest,TestAndAnswer,solRequest,TokenRequest,TextInput,TokenRequestRegister,UserCreate ,UserResponse,Token, UserInfo, TestHistoryResponse
+from core_logic.Accessories.utils import load_json
+from core_logic.Accessories.logger import logging
+from core_logic.Data.schemas import TestRequest,TestAndAnswer,solRequest,TokenRequest,TextInput,TokenRequestRegister,UserCreate ,UserResponse,Token, UserInfo, TestHistoryResponse
 from core_logic.Assessment.test_inference import get_inference
 
 
 # Database imports 
-from core_logic.data_related.database import User, Base, engine, SessionLocal, TestHistory
+from core_logic.Data.database import User, Base, engine, SessionLocal, TestHistory
 from sqlalchemy.orm import Session 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -329,7 +329,7 @@ async def get_solution_text(texti: solRequest, db: Session = Depends(get_db)):
 @app.get("/helplines")
 async def get_helplines(request: Request):
     try:
-        file_path = os.path.join(os.getcwd(), 'core_logic','accessories', 'helplines.json')
+        file_path = os.path.join(os.getcwd(), 'core_logic','Accessories', 'helplines.json')
         with open(file_path, 'r') as file:
             data = json.load(file)
 

@@ -1,32 +1,42 @@
+# Miraat/docker-compose.yml
 version: '3.8'
 
 services:
-  # Your FastAPI backend service
   backend:
-    build: .
+    build: ./backend
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
+      - ./backend:/app
+    env_file:
+      - ./.env # This loads all variables from .env into the container
     environment:
-      # This URL is now constructed from your credentials.
-      # Notice the hostname is 'db', not 'localhost'.
-      - DATABASE_URL=postgresql://postgres:postgresvikas@db:5432/miraat
+      # This constructs the DATABASE_URL your app will use INSIDE the container.
+      # Notice we use 'db' as the hostname, not 'localhost'.
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME} # <-- CRITICAL CHANGE
     depends_on:
       - db
-    # The --reload command for easy development.
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
-  # The PostgreSQL database service
+  frontend-builder:
+    image: node:18-alpine
+    working_dir: /app/frontend
+    command: npm run watch
+    volumes:
+      - .:/app
+
   db:
-    image: postgres:13-alpine
+    image: postgres:15-alpine
+    # This section uses the variables from .env to CREATE the database
+    environment:
+      - POSTGRES_USER=${DB_USER}       # <-- From .env
+      - POSTGRES_PASSWORD=${DB_PASSWORD} # <-- From .env
+      - POSTGRES_DB=${DB_NAME}         # <-- From .env
     volumes:
       - postgres_data:/var/lib/postgresql/data/
-    environment:
-      # These credentials MUST EXACTLY MATCH the DATABASE_URL above.
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgresvikas
-      - POSTGRES_DB=miraat
+    ports:
+      # This exposes the DB to your actual machine on localhost:5432
+      # so you can connect with a tool like DBeaver if you want.
+      - "5432:5432"
 
 volumes:
   postgres_data:
