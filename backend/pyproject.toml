@@ -21,7 +21,7 @@ dependencies = [
     "python-multipart==0.0.20",
     "email-validator",
     "langchain_google_genai",
-    
+    "spacy",
 ]
 
 [project.optional-dependencies]

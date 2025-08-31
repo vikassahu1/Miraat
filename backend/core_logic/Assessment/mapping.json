@@ -1,101 +1,128 @@
 {
-    "Mental_Health_Tests": {
-      "Mood Disorders": {
-        "Subcategories": {
-          "Major_Depressive_Disorder": {
-            "Tests": ["Patient Health Questionnaire (PHQ-9)"]
-          },
-          "Bipolar_Disorder": {
-            "Tests": ["Mood Disorder Questionnaire (MDQ)"]
-          }
+  "Mental_Health_Tests": {
+    "Mood Disorders": {
+      "description": "Characterized by significant and persistent disturbances in mood and emotional state, ranging from extreme sadness (depression) to extreme elation (mania).",
+      "Subcategories": {
+        "Major_Depressive_Disorder": {
+          "description": "Involves a constant sense of hopelessness and despair, with a loss of interest or pleasure in most activities.",
+          "Tests": ["Patient Health Questionnaire (PHQ-9)"]
+        },
+        "Bipolar_Disorder": {
+          "description": "Involves extreme mood swings that include emotional highs (mania or hypomania) and lows (depression).",
+          "Tests": ["Mood Disorder Questionnaire (MDQ)"]
         }
-      },
-      "Anxiety Disorders": {
-        "Subcategories": {
-          "Generalized_Anxiety_Disorder": {
-            "Tests": ["Generalized Anxiety Disorder 7 (GAD-7)"]
-          },
-          "Social_Anxiety_Disorder": {
-            "Tests": ["Liebowitz Social Anxiety Scale (LSAS)"]
-          }
+      }
+    },
+    "Anxiety Disorders": {
+      "description": "Characterized by intense, excessive, and persistent worry and fear about everyday situations, often involving repeated episodes of sudden intense anxiety and terror (panic attacks).",
+      "Subcategories": {
+        "Generalized_Anxiety_Disorder": {
+          "description": "Marked by persistent and excessive worry about a number of different things, often anticipating disaster and being overly concerned about money, health, family, or work.",
+          "Tests": ["Generalized Anxiety Disorder 7 (GAD-7)"]
+        },
+        "Social_Anxiety_Disorder": {
+          "description": "Involves a significant amount of fear, anxiety, and avoidance of social situations due to feelings of embarrassment, self-consciousness, and concern about being judged by others.",
+          "Tests": ["Liebowitz Social Anxiety Scale (LSAS)"]
         }
-      },
-      "Trauma and Stressor-Related Disorders": {
-        "Subcategories": {
-          "Post_Traumatic_Stress_Disorder": {
-            "Tests": ["PTSD Checklist for DSM-5 (PCL-5)"]
-          }
+      }
+    },
+    "Trauma and Stressor-Related Disorders": {
+      "description": "Involves exposure to a traumatic or stressful event. Symptoms include intrusive memories, avoidance, negative changes in mood and thinking, and altered arousal and reactivity.",
+      "Subcategories": {
+        "Post_Traumatic_Stress_Disorder": {
+          "description": "A disorder that develops in some people who have experienced a shocking, scary, or dangerous event. Symptoms include flashbacks, nightmares, and severe anxiety.",
+          "Tests": ["PTSD Checklist for DSM-5 (PCL-5)"]
         }
-      },
-      "Obsessive-Compulsive Disorder (OCD)": {
-        "Subcategories": {
-          "Obsessive_Compulsive_Disorder": {
-            "Tests": ["Yale-Brown Obsessive-Compulsive Scale (Y-BOCS)"]
-          }
+      }
+    },
+    "Obsessive-Compulsive Disorder (OCD)": {
+      "description": "Characterized by a pattern of unwanted thoughts and fears (obsessions) that lead you to do repetitive behaviors (compulsions).",
+      "Subcategories": {
+        "Obsessive_Compulsive_Disorder": {
+          "description": "Features recurring, unwanted thoughts, ideas, or sensations (obsessions) that make a person feel driven to do something repetitively (compulsions).",
+          "Tests": ["Yale-Brown Obsessive-Compulsive Scale (Y-BOCS)"]
         }
-      },
-      "Personality Disorders": {
-        "Subcategories": {
-          "Borderline_Personality_Disorder": {
-            "Tests": ["McLean Screening Instrument for Borderline Personality Disorder (MSI-BPD)"]
-          }
+      }
+    },
+    "Personality Disorders": {
+      "description": "Involves a rigid and unhealthy pattern of thinking, functioning, and behaving, causing significant problems and limitations in relationships, social activities, work, and school.",
+      "Subcategories": {
+        "Borderline_Personality_Disorder": {
+          "description": "Marked by a pattern of ongoing instability in moods, behavior, self-image, and functioning. This often results in impulsive actions and unstable relationships.",
+          "Tests": ["McLean Screening Instrument for Borderline Personality Disorder (MSI-BPD)"]
         }
-      },
-      "Eating Disorders": {
-        "Subcategories": {
-          "Eating_Disorders": {
-            "Tests": ["Eating Attitudes Test (EAT-26)"]
-          }
+      }
+    },
+    "Eating Disorders": {
+      "description": "Serious conditions related to persistent eating behaviors that negatively impact health, emotions, and the ability to function in important areas of life.",
+      "Subcategories": {
+        "Eating_Disorders": {
+          "description": "Characterized by severe disturbances in eating behavior and related thoughts and emotions, such as an unhealthy preoccupation with body weight and food.",
+          "Tests": ["Eating Attitudes Test (EAT-26)"]
         }
-      },
-      "Substance Use Disorders": {
-        "Subcategories": {
-          "Alcohol_Use_Disorder": {
-            "Tests": ["Alcohol Use Disorders Identification Test (AUDIT)"]
-          },
-          "Drug_Use_Disorders": {
-            "Tests": ["Drug Abuse Screening Test (DAST-10)"]
-          }
+      }
+    },
+    "Substance Use Disorders": {
+      "description": "A disease that affects a person's brain and behavior and leads to an inability to control the use of a legal or illegal drug or medicine.",
+      "Subcategories": {
+        "Alcohol_Use_Disorder": {
+          "description": "A medical condition characterized by an impaired ability to stop or control alcohol use despite adverse social, occupational, or health consequences.",
+          "Tests": ["Alcohol Use Disorders Identification Test (AUDIT)"]
+        },
+        "Drug_Use_Disorders": {
+          "description": "Involves the compulsive seeking and use of drugs despite harmful consequences. It is considered a brain disorder because it involves functional changes to brain circuits involved in reward, stress, and self-control.",
+          "Tests": ["Drug Abuse Screening Test (DAST-10)"]
         }
-      },
-      "Psychotic Disorders": {
-        "Subcategories": {
-          "Schizophrenia": {
-            "Tests": ["Positive and Negative Syndrome Scale (PANSS - Shortened Version)"]
-          }
+      }
+    },
+    "Psychotic Disorders": {
+      "description": "Severe mental disorders that cause abnormal thinking and perceptions. People with psychoses lose touch with reality. Two of the main symptoms are delusions and hallucinations.",
+      "Subcategories": {
+        "Schizophrenia": {
+          "description": "A serious mental disorder in which people interpret reality abnormally. It may result in hallucinations, delusions, and extremely disordered thinking and behavior that impairs daily functioning.",
+          "Tests": ["Positive and Negative Syndrome Scale (PANSS - Shortened Version)"]
         }
-      },
-      "Neurodevelopmental Disorders": {
-        "Subcategories": {
-          "Autism_Spectrum_Disorder": {
-            "Tests": ["Autism Spectrum Rating Scales (ASRS - Short Version)"]
-          },
-          "Attention_Deficit_Hyperactivity_Disorder": {
-            "Tests": ["Vanderbilt ADHD Diagnostic Rating Scale (VADRS)"]
-          }
+      }
+    },
+    "Neurodevelopmental Disorders": {
+      "description": "A group of conditions with onset in the developmental period. They typically manifest early in development, often before the child enters grade school, and are characterized by developmental deficits that produce impairments of personal, social, academic, or occupational functioning.",
+      "Subcategories": {
+        "Autism_Spectrum_Disorder": {
+          "description": "A complex developmental condition involving persistent challenges in social interaction, speech and nonverbal communication, and restricted/repetitive behaviors.",
+          "Tests": ["Autism Spectrum Rating Scales (ASRS - Short Version)"]
+        },
+        "Attention_Deficit_Hyperactivity_Disorder": {
+          "description": "A chronic condition including attention difficulty, hyperactivity, and impulsiveness.",
+          "Tests": ["Vanderbilt ADHD Diagnostic Rating Scale (VADRS)"]
         }
-      },
-      "Impulse Control Disorders": {
-        "Subcategories": {
-          "Intermittent_Explosive_Disorder": {
-            "Tests": ["Intermittent Explosive Disorder Scale (IEDS)"]
-          }
+      }
+    },
+    "Impulse Control Disorders": {
+      "description": "Conditions in which a person has trouble controlling emotions or behaviors. Often, the behaviors are impulsive and can be harmful to oneself or others.",
+      "Subcategories": {
+        "Intermittent_Explosive_Disorder": {
+          "description": "Involves repeated, sudden episodes of impulsive, aggressive, violent behavior or angry verbal outbursts in which you react grossly out of proportion to the situation.",
+          "Tests": ["Intermittent Explosive Disorder Scale (IEDS)"]
         }
-      },
-      "Social and Emotional Well-being": {
-        "Subcategories": {
-          "General_Emotional_Well_being": {
-            "Tests": ["Warwick-Edinburgh Mental Well-being Scale (WEMWBS)"]
-          }
+      }
+    },
+    "Social and Emotional Well-being": {
+      "description": "Refers to a person's overall psychological state, including their ability to feel, think, and act in ways that create a positive impact on their functioning and quality of life.",
+      "Subcategories": {
+        "General_Emotional_Well_being": {
+          "description": "Encompasses a person's ability to manage feelings, cope with stress, and maintain a positive outlook on life.",
+          "Tests": ["Warwick-Edinburgh Mental Well-being Scale (WEMWBS)"]
         }
-      },
-      "Suicidal Tendencies": {
-        "Subcategories": {
-          "Suicidal_Tendencies": {
-            "Tests": ["Columbia-Suicide Severity Rating Scale (C-SSRS)"]
-          }
+      }
+    },
+    "Suicidal Tendencies": {
+      "description": "Refers to thoughts, plans, or actions related to intentionally ending one's own life. This is a serious psychiatric emergency.",
+      "Subcategories": {
+        "Suicidal_Tendencies": {
+          "description": "Involves thinking about or planning suicide. It can range from a fleeting thought to a detailed plan.",
+          "Tests": ["Columbia-Suicide Severity Rating Scale (C-SSRS)"]
         }
       }
     }
   }
-  
+}

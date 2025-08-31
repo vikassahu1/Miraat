@@ -69,6 +69,8 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # <--------------------------------------------------------------------------------------------------------------------------------->
 
 
+# in Miraat/backend/main.py
+from app.api.v1 import conversation as session_v2
 
 
 
@@ -82,8 +84,8 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 
-
-
+# in Miraat/backend/main.py
+app.include_router(session_v2.router, prefix="/api/v2", tags=["V2 - Session"])
 
 
 
@@ -98,8 +100,6 @@ def get_db():
         raise
     finally:
         db.close()
-
-
 
 
 
@@ -562,4 +562,50 @@ def get_test_history(user_name: str, db: Session = Depends(get_db)):
     return test_history
  
 
-#  <----------------------------------------------------------------------------------------------------------------------  Community Section  ---------------------------------------------------------------------------------------->
+
+
+
+
+
+
+
+
+
+
+
+
+# <---  PHASE  2 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------->
+
+from app.api.v1 import conversation as conversation_api
+from app.services.conversation_service import ConversationService
+# ... (import other services as you build them) ...
+
+
+
+KB_PATH = os.path.join(os.path.dirname(__file__), 'core_logic', 'Assessment','mapping.json')
+try:
+    with open(KB_PATH) as f:
+        KNOWLEDGE_BASE = json.load(f)["Mental_Health_Tests"]
+    print("Knowledge Base loaded successfully.")
+except FileNotFoundError:
+    print(f"FATAL ERROR: Knowledge Base file not found at {KB_PATH}")
+    KNOWLEDGE_BASE = {} # App will still run but with limited functionality
+
+
+
+# These are the single, shared instances of each service used by the API.
+conversation_service_instance = ConversationService(knowledge_base=KNOWLEDGE_BASE)
+
+# app = FastAPI(title="Miraat V3 API")
+
+# --- Dependency Injection Wiring ---
+# This is how we provide the live service instance to our API endpoints.
+# It overrides the placeholder function in conversation.py.
+def get_conversation_service_instance_override():
+    return conversation_service_instance
+
+app.dependency_overrides[conversation_api.get_conversation_service] = get_conversation_service_instance_override
+
+
+app.include_router(conversation_api.router, prefix="/api/v1/conversation", tags=["Conversation"])
+

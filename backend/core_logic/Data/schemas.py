@@ -86,3 +86,18 @@ class TestHistoryResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+
+# Project enhancements phase 2
+# A Pydantic model for validation
+class ConversationState(BaseModel):
+    conversation_id: str
+    user_id: str | None = None
+    original_text: str
+    cleaned_text: str
+    priming_conversation: list[dict]
+    belief_state: dict
+    final_category: str | None = None
+    test_results: dict | None = None
+    status: str # e.g., "priming", "refining", "assessing", "complete"
