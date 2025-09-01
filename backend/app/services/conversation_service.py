@@ -5,6 +5,8 @@ from core_logic.Accessories.exception import CustomException
 from core_logic.Accessories.logger import logging
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.output_parsers import PydanticOutputParser
+
+
 from app.services.schemas import Verdict 
 import os
 import json
@@ -15,9 +17,11 @@ class ConversationService:
         self.knowledge_base = knowledge_base
         try:
             self.llm_client = llm
+            self.parser = PydanticOutputParser(pydantic_object=Verdict)
             logging.info("ConversationService: Gemini LLM client initialized.")
         except Exception:
             self.llm_client = None
+            self.parser = None
             logging.info("ConversationService: Could not initialize Gemini LLM client.")
 
 
@@ -32,6 +36,7 @@ class ConversationService:
         except Exception as e:
             print(f"LLM call failed: {e}")
             return "Error: LLM call failed."
+
 
 
     def generate_probing_question(self, initial_text: str) -> str:
@@ -66,6 +71,8 @@ class ConversationService:
         if not description:
             raise Exception(f"Category '{category}' not found in knowledge base.")
         return description['description']
+
+
 
 
     def _get_subcategories(self, category: str) -> list:
@@ -143,23 +150,20 @@ class ConversationService:
 
 
 
+
     def evaluate_user_answer(self, session_data: dict) -> dict:
-        """
-        Uses LangChain's structured output to force the LLM
-        to return a reliable, validated Pydantic object.
-        """
-        if not self.llm_client:
-            return {} # Return empty if LangChain failed to initialize
+        if not self.llm_client or not self.parser:
+            print("ERROR: LLM or Parser not available for evaluation.")
+            return {}
 
         belief_state = session_data.get('belief_state') or {}
         conversation_history = session_data.get('conversation_history', [])
         
-        if len(belief_state) < 2 or len(conversation_history) < 2: return {}
+        if len(belief_state) < 1 or len(conversation_history) < 2: return {}
 
         candidates = list(belief_state.keys())
-
         last_question = next((turn['content'] for turn in reversed(conversation_history) if turn['role'] == 'assistant'), None)
-        last_answer = next((turn['content'] for turn in reversed(conversation_history) if turn['role'] == 'user'), None)
+        last_answer = conversation_history[-1]['content']
 
         if not last_question: return {}
 
@@ -168,97 +172,79 @@ class ConversationService:
             description = self._get_description(category)
             context_definitions += f"Possibility: '{category}'\nDescription: \"{description}\"\n\n"
 
-        # --- The LangChain Prompt ---
-        # This is simpler because we don't need to describe the JSON structure.
-        # LangChain handles that for us.
+        # --- The Prompt now explicitly includes formatting instructions from the parser ---
         prompt = ChatPromptTemplate.from_messages([
-            ("system",
-             "You are a highly precise and logical reasoning assistant. Analyze the user's answer to the question and determine which of the given possibilities their answer most strongly supports. "
-             "You must base your decision strictly on the provided descriptions and the conversation. "
-             "Respond ONLY in the following JSON format: "
-             '{{"supported_category": <string>, "reasoning": <string>, "confidence_score": <float between 0.0 and 1.0>}}'  " Do not include any other text, explanation, or markdown.\n"
-             "For example: {{\"supported_category\": \"Anxiety Disorders\", \"reasoning\": \"The user's answer mentions persistent worry and fear, which matches the description.\", \"confidence_score\": 0.85}}"
-            ),
-            ("human",
-             "---CONTEXT---\n"
-             "Here are the descriptions of the possibilities:\n{definitions}\n"
+            ("system", 
+             "You are a logical analyst. Your task is to determine which of several possibilities a user's statement supports. "
+             "You must provide your answer in the specified JSON format.\n"
+             "{format_instructions}"), # <-- The magic instruction is injected here
+            ("human", 
+             "Analyze the conversation and context below. Then, format your response according to the instructions.\n\n"
+             "---CONTEXT---\n{definitions}\n\n"
              "---CONVERSATION---\n"
              "Question Asked: \"{question}\"\n"
-             "User's Answer: \"{answer}\"\n\n"
-             "---YOUR TASK---\n"
-             "Analyze the user's response and determine the single most supported category and your confidence in that verdict."
-            )
+             "User's Answer: \"{answer}\"")
         ])
         
-        # --- Create the chain ---
-        chain = prompt | self.llm_client
-        verdict_parser = PydanticOutputParser(pydantic_object=Verdict)
+        # The chain now pipes the LLM output directly into the parser
+        chain = prompt | self.llm_client | self.parser
 
         try:
-            # Get raw output from LLM
-            raw_output = chain.invoke({
+            print("Invoking LangChain PydanticOutputParser chain...")
+            # The parser gets the format instructions and injects them into the prompt
+            verdict_object: Verdict = chain.invoke({
                 "definitions": context_definitions,
                 "question": last_question,
-                "answer": last_answer
+                "answer": last_answer,
+                "format_instructions": self.parser.get_format_instructions(),
             })
-            # Try parsing with PydanticOutputParser first
-            try:
-                verdict_object = verdict_parser.parse(str(raw_output))
-                return verdict_object.model_dump()
-            except Exception:
-                # Fallback: try to extract JSON and coerce to Pydantic Verdict
-                import json as _json
-                import re as _re
-                # Extract JSON object from string (handles extra text)
-                match = _re.search(r'\{.*?\}', str(raw_output), _re.DOTALL)
-                if not match:
-                    print("Could not find JSON object in LLM output.")
-                    return {}
-                json_str = match.group(0)
-                # Remove trailing non-JSON text (e.g., after the closing brace)
-                json_str = json_str.strip()
-                # Convert single quotes to double quotes for JSON compatibility
-                json_str = json_str.replace("'", '"')
-                # Remove any trailing commas before the closing brace
-                json_str = _re.sub(r',\s*}', '}', json_str)
-                try:
-                    data = _json.loads(json_str)
-                    verdict_object = Verdict(**data)
-                    return verdict_object.model_dump()
-                except Exception as e2:
-                    print(f"Failed to coerce LLM output to Verdict: {e2}\nRaw JSON: {json_str}")
-                    return {}
+            
+            print(f"LangChain evaluation successful. Verdict: {verdict_object.model_dump()}")
+            return verdict_object.model_dump()
+
         except Exception as e:
-            print(f"LangChain evaluation failed: {e}")
+            # This will catch LangChain's OutputParserException if Gemini still fails
+            print(f"LangChain evaluation with parser failed: {e}")
             return {}
+
+
+
 
 
 
     def update_belief_state(self, session_data: dict, evaluation: dict) -> dict:
         supported_category = evaluation.get("supported_category")
-        confidence = evaluation.get("confidence_score", 0.7) # Use the AI's confidence
+        confidence = evaluation.get("confidence_score", 0.5) # Default to neutral confidence
         current_candidates = session_data.get('belief_state') or {}
 
+        # Validate that the returned category is one we are actually considering
         if not supported_category or supported_category not in current_candidates:
-            return session_data
+            print(f"Warning: Evaluation returned a category not in the current belief state: {supported_category}")
+            return session_data # Make no changes if the verdict is invalid
 
         new_scores = {}
+        # Apply a weighted update. A higher confidence verdict has a stronger effect.
         for category, score in current_candidates.items():
             if category == supported_category:
-                # Boost based on the AI's confidence
-                new_scores[category] = score * (1 + confidence)
+                # Boost the winner
+                new_scores[category] = score * (1 + confidence) 
             else:
-                # Penalize others
-                new_scores[category] = score * (1 - confidence)
+                # Penalize the losers, but less harshly
+                new_scores[category] = score * (1 - (confidence * 0.5))
 
-        # Normalize and update the state (this logic remains the same)
+        # Normalize the scores so they sum to 1.0
         total_new_score = sum(new_scores.values())
         if total_new_score > 0:
             normalized_scores = {cat: score / total_new_score for cat, score in new_scores.items()}
-            session_data['belief_state'] = dict(sorted(normalized_scores.items(), key=lambda item: item[1], reverse=True))
-
+            session_data['belief_state'] = dict(sorted(
+                normalized_scores.items(), key=lambda item: item[1], reverse=True
+            ))
+        
+        reasoning = evaluation.get('reasoning', 'No reasoning provided.')
+        print(f"Belief State Updated. Reason: '{reasoning}'. New Belief: {session_data['belief_state']}")
+        
         return session_data
-    
+
 
 
     def check_funnel_completion(self, session_data: dict) -> str | None:
@@ -273,65 +259,6 @@ class ConversationService:
         # ... (check thresholds) ...
         return top_candidate_name
     
-
-
-
-
-    def update_belief_state(self, session_data: dict, evaluation: dict) -> dict:
-        """
-        Updates the confidence scores in the belief_state based on the
-        evaluation from the "Judge" LLM. This is the core of the funneling logic.
-
-        Args:
-            session_data: The current SessionData object.
-            evaluation: The verdict from the evaluate_user_answer function.
-
-        Returns:
-            The updated SessionData object with new belief scores.
-        """
-        supported_category = evaluation.get("supported_category")
-        current_candidates = session_data.get('belief_state') or {}
-
-        # --- 1. Defensive Check ---
-        # If the evaluation failed or returned an invalid category, make no changes.
-        if not supported_category or supported_category not in current_candidates:
-            return session_data
-
-        # --- 2. The Score Update Algorithm ---
-        new_scores = {}
-        
-        # We use a simple but effective re-weighting scheme.
-        for category, score in current_candidates.items():
-            if category == supported_category:
-                # Strongly boost the score of the supported category.
-                new_scores[category] = score * 2.0 
-            else:
-                # Penalize the scores of the unsupported categories.
-                new_scores[category] = score * 0.5
-
-        # --- 3. Normalization ---
-        # We re-normalize the scores so they always sum to 1.0. This keeps the
-        # belief state stable and interpretable as a probability distribution.
-        total_new_score = sum(new_scores.values())
-        if total_new_score > 0:
-            normalized_scores = {cat: score / total_new_score for cat, score in new_scores.items()}
-            
-            # --- 4. Update the State Object ---
-            # Sort the candidates by their new, updated score.
-            session_data['belief_state'] = dict(sorted(
-                normalized_scores.items(), 
-                key=lambda item: item[1], 
-                reverse=True
-            ))
-        
-        # Also log the reasoning for this update for audit purposes
-        reasoning = evaluation.get('reasoning', 'No reasoning provided.')
-        print(f"Belief State Updated. Reason: '{reasoning}'. New Scores: {session_data['belief_state']}")
-        
-        return session_data
-
-
-
 
 
 
@@ -519,7 +446,7 @@ dic = {
       },
             {
         "role": "user",
-        "content": "I dont know what is happeninng but i am not getting chills time to time like smthing bad happened"
+        "content": "when i see group of people I start trembling specially girls"
       },
     ],
     "belief_state": {'Anxiety Disorders':0.8, 'Trauma and Stressor-Related Disorders':0.2},
