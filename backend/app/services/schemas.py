@@ -32,7 +32,8 @@ class SessionData(BaseModel):
     
     status: Literal[
         "priming", 
-        "refining", 
+        "refining_broad",  
+        "refining_sub", 
         "assessing", 
         "complete"
     ] = Field(..., description="The current stage of the diagnostic funnel.")
@@ -73,3 +74,11 @@ class RespondResponse(BaseModel):
     status: str # e.g., "in_progress", "assessment_ready", "complete"
     ai_question: Optional[str] = None # The next question to ask
     session_data: SessionData # The server returns the updated state
+
+class Verdict(BaseModel):
+    """
+    The structured output for an AI Judge's evaluation of a user's answer.
+    """
+    supported_category: str = Field(description="The single category that the user's answer most strongly supports.")
+    reasoning: str = Field(description="A brief, one-sentence justification for why this category was chosen, quoting the user's answer.")
+    confidence_score: float = Field(description="A confidence score from 0.0 to 1.0 indicating how certain the AI is about its verdict.")

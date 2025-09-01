@@ -84,12 +84,6 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 
-# in Miraat/backend/main.py
-app.include_router(session_v2.router, prefix="/api/v2", tags=["V2 - Session"])
-
-
-
-
 # Dependency to get database session
 def get_db():
     try:
@@ -578,6 +572,7 @@ def get_test_history(user_name: str, db: Session = Depends(get_db)):
 
 from app.api.v1 import conversation as conversation_api
 from app.services.conversation_service import ConversationService
+from app.services.triage_service import TriageService
 # ... (import other services as you build them) ...
 
 
@@ -595,6 +590,7 @@ except FileNotFoundError:
 
 # These are the single, shared instances of each service used by the API.
 conversation_service_instance = ConversationService(knowledge_base=KNOWLEDGE_BASE)
+triage_service_instance = TriageService(categories=list(KNOWLEDGE_BASE.keys()))
 
 # app = FastAPI(title="Miraat V3 API")
 
@@ -604,8 +600,14 @@ conversation_service_instance = ConversationService(knowledge_base=KNOWLEDGE_BAS
 def get_conversation_service_instance_override():
     return conversation_service_instance
 
-app.dependency_overrides[conversation_api.get_conversation_service] = get_conversation_service_instance_override
+def get_triage_service_instance_override(): 
+    return triage_service_instance
 
+app.dependency_overrides[conversation_api.get_conversation_service] = get_conversation_service_instance_override
+app.dependency_overrides[conversation_api.get_triage_service] = get_triage_service_instance_override
 
 app.include_router(conversation_api.router, prefix="/api/v1/conversation", tags=["Conversation"])
+
+
+
 

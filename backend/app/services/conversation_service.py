@@ -3,6 +3,11 @@ from core_logic.Accessories.exception import CustomException
 from core_logic.Accessories.logger import logging
 from core_logic.Accessories.exception import CustomException
 from core_logic.Accessories.logger import logging
+from langchain_core.prompts import ChatPromptTemplate
+from langchain.output_parsers import PydanticOutputParser
+from app.services.schemas import Verdict 
+import os
+import json
 
 
 class ConversationService:
@@ -14,6 +19,7 @@ class ConversationService:
         except Exception:
             self.llm_client = None
             logging.info("ConversationService: Could not initialize Gemini LLM client.")
+
 
     def _make_llm_call(self, system_prompt: str, user_prompt: str) -> str:
         if not self.llm_client:
@@ -28,7 +34,6 @@ class ConversationService:
             return "Error: LLM call failed."
 
 
-    # --- NEW FUNCTION FOR THE PRIMING STAGE ---
     def generate_probing_question(self, initial_text: str) -> str:
         """
         Generates a simple, open-ended question to encourage the user to elaborate.
@@ -54,4 +59,477 @@ class ConversationService:
         except Exception:
             return fallback_question
 
-    # ... (The other functions like generate_differentiating_question will be used in the next stage) ...
+
+
+    def _get_description(self, category: str) -> str:
+        description = self.knowledge_base.get(category)
+        if not description:
+            raise Exception(f"Category '{category}' not found in knowledge base.")
+        return description['description']
+
+
+    def _get_subcategories(self, category: str) -> list:
+        category_info = self.knowledge_base.get(category)
+        if not category_info:
+            raise Exception(f"Category '{category}' not found in knowledge base.")
+        return list(category_info.get('Subcategories', {}).keys())
+    
+
+
+
+    def generate_differentiating_question(self, session_data: dict) -> str:
+        """
+        Args:
+            session_data: The entire, current SessionData object for the conversation.
+
+        Returns:
+            A single, empathetic, and differentiating question as a string.
+        """
+        conversation_history = session_data.get('conversation_history', [])
+
+        # --- 1. Handle Edge Cases ---
+        candidates = session_data.get('belief_state') or {}
+        if not candidates or len(candidates) < 2:
+            return "Thank you. That's very helpful. Let's move on to the next step."
+
+        top_candidates = sorted(candidates.keys(), key=lambda k: candidates[k], reverse=True)[:2]
+
+        # --- 2. Grounding: Retrieve Context from Your Knowledge Base ---
+        context_definitions = ""
+        for category in top_candidates:
+            description = self._get_description(category)
+            context_definitions += f"Theme: '{category}'\nDescription: \"{description}\"\n\n"
+
+        # --- 3. Contextualization: Format the Recent Conversation History ---
+        formatted_history = ""
+        recent_turns = conversation_history[-4:]
+        for turn in recent_turns:
+            # Convert Pydantic model to dict if necessary, or access attributes
+            role = "User" if turn.get('role') == 'user' else "AI Assistant"
+            content = turn.get('content', '')
+            formatted_history += f"{role}: {content}\n"
+
+        # --- 4. Professional, Context-Aware Prompt Engineering (This part was correct) ---
+        system_prompt = (
+            "You are a compassionate and highly skilled AI assistant, acting as a clinical intake specialist. "
+            "Your ONLY job is to continue an ongoing conversation by asking a single, clarifying question. "
+            "You are given the conversation history so far, and descriptions of the most likely psychological themes. "
+            "Your task is to generate the NEXT logical question to best differentiate between the themes, based on what the user has already said. "
+            "RULES: "
+            "1. DO NOT repeat a question that has already been asked. "
+            "2. Your question must feel like a natural continuation of the dialogue. "
+            "3. DO NOT offer advice, diagnosis, or analysis. "
+            "4. Ask the question directly, without any preamble."
+        )
+        user_prompt = (
+            f"---RECENT CONVERSATION---\n{formatted_history}\n"
+            f"---CANDIDATE THEMES TO DIFFERENTIATE---\n{context_definitions}\n"
+            f"---YOUR TASK---\nBased on the conversation so far, generate the single best follow-up question to differentiate between the candidate themes:"
+        )
+        
+        # --- 5. The LLM Call with a Safe Fallback ---
+        fallback_question = "Thank you for sharing that. To help me understand a bit better, could you tell me more about a specific time you felt this way recently?"
+        
+        # ... (The rest of the function: try/except block, LLM call, and post-processing remains the same) ...
+        try:
+            question = self._make_llm_call(system_prompt, user_prompt)
+            if not question or "Error" in question or len(question) < 15:
+                return fallback_question
+            return question.strip().strip('"')
+        except Exception as e:
+            print(f"An unexpected error occurred in generate_differentiating_question: {e}")
+            return fallback_question
+
+
+
+
+    def evaluate_user_answer(self, session_data: dict) -> dict:
+        """
+        Uses LangChain's structured output to force the LLM
+        to return a reliable, validated Pydantic object.
+        """
+        if not self.llm_client:
+            return {} # Return empty if LangChain failed to initialize
+
+        belief_state = session_data.get('belief_state') or {}
+        conversation_history = session_data.get('conversation_history', [])
+        
+        if len(belief_state) < 2 or len(conversation_history) < 2: return {}
+
+        candidates = list(belief_state.keys())
+
+        last_question = next((turn['content'] for turn in reversed(conversation_history) if turn['role'] == 'assistant'), None)
+        last_answer = next((turn['content'] for turn in reversed(conversation_history) if turn['role'] == 'user'), None)
+
+        if not last_question: return {}
+
+        context_definitions = ""
+        for category in candidates:
+            description = self._get_description(category)
+            context_definitions += f"Possibility: '{category}'\nDescription: \"{description}\"\n\n"
+
+        # --- The LangChain Prompt ---
+        # This is simpler because we don't need to describe the JSON structure.
+        # LangChain handles that for us.
+        prompt = ChatPromptTemplate.from_messages([
+            ("system",
+             "You are a highly precise and logical reasoning assistant. Analyze the user's answer to the question and determine which of the given possibilities their answer most strongly supports. "
+             "You must base your decision strictly on the provided descriptions and the conversation. "
+             "Respond ONLY in the following JSON format: "
+             '{{"supported_category": <string>, "reasoning": <string>, "confidence_score": <float between 0.0 and 1.0>}}'  " Do not include any other text, explanation, or markdown.\n"
+             "For example: {{\"supported_category\": \"Anxiety Disorders\", \"reasoning\": \"The user's answer mentions persistent worry and fear, which matches the description.\", \"confidence_score\": 0.85}}"
+            ),
+            ("human",
+             "---CONTEXT---\n"
+             "Here are the descriptions of the possibilities:\n{definitions}\n"
+             "---CONVERSATION---\n"
+             "Question Asked: \"{question}\"\n"
+             "User's Answer: \"{answer}\"\n\n"
+             "---YOUR TASK---\n"
+             "Analyze the user's response and determine the single most supported category and your confidence in that verdict."
+            )
+        ])
+        
+        # --- Create the chain ---
+        chain = prompt | self.llm_client
+        verdict_parser = PydanticOutputParser(pydantic_object=Verdict)
+
+        try:
+            # Get raw output from LLM
+            raw_output = chain.invoke({
+                "definitions": context_definitions,
+                "question": last_question,
+                "answer": last_answer
+            })
+            # Try parsing with PydanticOutputParser first
+            try:
+                verdict_object = verdict_parser.parse(str(raw_output))
+                return verdict_object.model_dump()
+            except Exception:
+                # Fallback: try to extract JSON and coerce to Pydantic Verdict
+                import json as _json
+                import re as _re
+                # Extract JSON object from string (handles extra text)
+                match = _re.search(r'\{.*?\}', str(raw_output), _re.DOTALL)
+                if not match:
+                    print("Could not find JSON object in LLM output.")
+                    return {}
+                json_str = match.group(0)
+                # Remove trailing non-JSON text (e.g., after the closing brace)
+                json_str = json_str.strip()
+                # Convert single quotes to double quotes for JSON compatibility
+                json_str = json_str.replace("'", '"')
+                # Remove any trailing commas before the closing brace
+                json_str = _re.sub(r',\s*}', '}', json_str)
+                try:
+                    data = _json.loads(json_str)
+                    verdict_object = Verdict(**data)
+                    return verdict_object.model_dump()
+                except Exception as e2:
+                    print(f"Failed to coerce LLM output to Verdict: {e2}\nRaw JSON: {json_str}")
+                    return {}
+        except Exception as e:
+            print(f"LangChain evaluation failed: {e}")
+            return {}
+
+
+
+    def update_belief_state(self, session_data: dict, evaluation: dict) -> dict:
+        supported_category = evaluation.get("supported_category")
+        confidence = evaluation.get("confidence_score", 0.7) # Use the AI's confidence
+        current_candidates = session_data.get('belief_state') or {}
+
+        if not supported_category or supported_category not in current_candidates:
+            return session_data
+
+        new_scores = {}
+        for category, score in current_candidates.items():
+            if category == supported_category:
+                # Boost based on the AI's confidence
+                new_scores[category] = score * (1 + confidence)
+            else:
+                # Penalize others
+                new_scores[category] = score * (1 - confidence)
+
+        # Normalize and update the state (this logic remains the same)
+        total_new_score = sum(new_scores.values())
+        if total_new_score > 0:
+            normalized_scores = {cat: score / total_new_score for cat, score in new_scores.items()}
+            session_data['belief_state'] = dict(sorted(normalized_scores.items(), key=lambda item: item[1], reverse=True))
+
+        return session_data
+    
+
+
+    def check_funnel_completion(self, session_data: dict) -> str | None:
+        # --- CORRECTED CODE ---
+        candidates = session_data.get('belief_state') or {}
+        if not candidates:
+            return None
+
+        # The rest of this function's logic was correct and can remain the same.
+        sorted_candidates = list(candidates.items())
+        top_candidate_name, top_candidate_score = sorted_candidates[0]
+        # ... (check thresholds) ...
+        return top_candidate_name
+    
+
+
+
+
+    def update_belief_state(self, session_data: dict, evaluation: dict) -> dict:
+        """
+        Updates the confidence scores in the belief_state based on the
+        evaluation from the "Judge" LLM. This is the core of the funneling logic.
+
+        Args:
+            session_data: The current SessionData object.
+            evaluation: The verdict from the evaluate_user_answer function.
+
+        Returns:
+            The updated SessionData object with new belief scores.
+        """
+        supported_category = evaluation.get("supported_category")
+        current_candidates = session_data.get('belief_state') or {}
+
+        # --- 1. Defensive Check ---
+        # If the evaluation failed or returned an invalid category, make no changes.
+        if not supported_category or supported_category not in current_candidates:
+            return session_data
+
+        # --- 2. The Score Update Algorithm ---
+        new_scores = {}
+        
+        # We use a simple but effective re-weighting scheme.
+        for category, score in current_candidates.items():
+            if category == supported_category:
+                # Strongly boost the score of the supported category.
+                new_scores[category] = score * 2.0 
+            else:
+                # Penalize the scores of the unsupported categories.
+                new_scores[category] = score * 0.5
+
+        # --- 3. Normalization ---
+        # We re-normalize the scores so they always sum to 1.0. This keeps the
+        # belief state stable and interpretable as a probability distribution.
+        total_new_score = sum(new_scores.values())
+        if total_new_score > 0:
+            normalized_scores = {cat: score / total_new_score for cat, score in new_scores.items()}
+            
+            # --- 4. Update the State Object ---
+            # Sort the candidates by their new, updated score.
+            session_data['belief_state'] = dict(sorted(
+                normalized_scores.items(), 
+                key=lambda item: item[1], 
+                reverse=True
+            ))
+        
+        # Also log the reasoning for this update for audit purposes
+        reasoning = evaluation.get('reasoning', 'No reasoning provided.')
+        print(f"Belief State Updated. Reason: '{reasoning}'. New Scores: {session_data['belief_state']}")
+        
+        return session_data
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    knowledge_base = {"Mood Disorders": {
+    "description": "Characterized by significant and persistent disturbances in mood and emotional state, ranging from extreme sadness (depression) to extreme elation (mania).",
+    "Subcategories": {
+    "Major_Depressive_Disorder": {
+        "description": "Involves a constant sense of hopelessness and despair, with a loss of interest or pleasure in most activities.",
+        "Tests": ["Patient Health Questionnaire (PHQ-9)"]
+    },
+    "Bipolar_Disorder": {
+        "description": "Involves extreme mood swings that include emotional highs (mania or hypomania) and lows (depression).",
+        "Tests": ["Mood Disorder Questionnaire (MDQ)"]
+    }
+    }
+},
+"Anxiety Disorders": {
+    "description": "Characterized by intense, excessive, and persistent worry and fear about everyday situations, often involving repeated episodes of sudden intense anxiety and terror (panic attacks).",
+    "Subcategories": {
+    "Generalized_Anxiety_Disorder": {
+        "description": "Marked by persistent and excessive worry about a number of different things, often anticipating disaster and being overly concerned about money, health, family, or work.",
+        "Tests": ["Generalized Anxiety Disorder 7 (GAD-7)"]
+    },
+    "Social_Anxiety_Disorder": {
+        "description": "Involves a significant amount of fear, anxiety, and avoidance of social situations due to feelings of embarrassment, self-consciousness, and concern about being judged by others.",
+        "Tests": ["Liebowitz Social Anxiety Scale (LSAS)"]
+    }
+    }
+},
+"Trauma and Stressor-Related Disorders": {
+    "description": "Involves exposure to a traumatic or stressful event. Symptoms include intrusive memories, avoidance, negative changes in mood and thinking, and altered arousal and reactivity.",
+    "Subcategories": {
+    "Post_Traumatic_Stress_Disorder": {
+        "description": "A disorder that develops in some people who have experienced a shocking, scary, or dangerous event. Symptoms include flashbacks, nightmares, and severe anxiety.",
+        "Tests": ["PTSD Checklist for DSM-5 (PCL-5)"]
+    }
+    }
+},
+"Obsessive-Compulsive Disorder (OCD)": {
+    "description": "Characterized by a pattern of unwanted thoughts and fears (obsessions) that lead you to do repetitive behaviors (compulsions).",
+    "Subcategories": {
+    "Obsessive_Compulsive_Disorder": {
+        "description": "Features recurring, unwanted thoughts, ideas, or sensations (obsessions) that make a person feel driven to do something repetitively (compulsions).",
+        "Tests": ["Yale-Brown Obsessive-Compulsive Scale (Y-BOCS)"]
+    }
+    }
+},
+"Personality Disorders": {
+    "description": "Involves a rigid and unhealthy pattern of thinking, functioning, and behaving, causing significant problems and limitations in relationships, social activities, work, and school.",
+    "Subcategories": {
+    "Borderline_Personality_Disorder": {
+        "description": "Marked by a pattern of ongoing instability in moods, behavior, self-image, and functioning. This often results in impulsive actions and unstable relationships.",
+        "Tests": ["McLean Screening Instrument for Borderline Personality Disorder (MSI-BPD)"]
+    }
+    }
+},
+"Eating Disorders": {
+    "description": "Serious conditions related to persistent eating behaviors that negatively impact health, emotions, and the ability to function in important areas of life.",
+    "Subcategories": {
+    "Eating_Disorders": {
+        "description": "Characterized by severe disturbances in eating behavior and related thoughts and emotions, such as an unhealthy preoccupation with body weight and food.",
+        "Tests": ["Eating Attitudes Test (EAT-26)"]
+    }
+    }
+},
+"Substance Use Disorders": {
+    "description": "A disease that affects a person's brain and behavior and leads to an inability to control the use of a legal or illegal drug or medicine.",
+    "Subcategories": {
+    "Alcohol_Use_Disorder": {
+        "description": "A medical condition characterized by an impaired ability to stop or control alcohol use despite adverse social, occupational, or health consequences.",
+        "Tests": ["Alcohol Use Disorders Identification Test (AUDIT)"]
+    },
+    "Drug_Use_Disorders": {
+        "description": "Involves the compulsive seeking and use of drugs despite harmful consequences. It is considered a brain disorder because it involves functional changes to brain circuits involved in reward, stress, and self-control.",
+        "Tests": ["Drug Abuse Screening Test (DAST-10)"]
+    }
+    }
+},
+"Psychotic Disorders": {
+    "description": "Severe mental disorders that cause abnormal thinking and perceptions. People with psychoses lose touch with reality. Two of the main symptoms are delusions and hallucinations.",
+    "Subcategories": {
+    "Schizophrenia": {
+        "description": "A serious mental disorder in which people interpret reality abnormally. It may result in hallucinations, delusions, and extremely disordered thinking and behavior that impairs daily functioning.",
+        "Tests": ["Positive and Negative Syndrome Scale (PANSS - Shortened Version)"]
+    }
+    }
+},
+"Neurodevelopmental Disorders": {
+    "description": "A group of conditions with onset in the developmental period. They typically manifest early in development, often before the child enters grade school, and are characterized by developmental deficits that produce impairments of personal, social, academic, or occupational functioning.",
+    "Subcategories": {
+    "Autism_Spectrum_Disorder": {
+        "description": "A complex developmental condition involving persistent challenges in social interaction, speech and nonverbal communication, and restricted/repetitive behaviors.",
+        "Tests": ["Autism Spectrum Rating Scales (ASRS - Short Version)"]
+    },
+    "Attention_Deficit_Hyperactivity_Disorder": {
+        "description": "A chronic condition including attention difficulty, hyperactivity, and impulsiveness.",
+        "Tests": ["Vanderbilt ADHD Diagnostic Rating Scale (VADRS)"]
+    }
+    }
+},
+"Impulse Control Disorders": {
+    "description": "Conditions in which a person has trouble controlling emotions or behaviors. Often, the behaviors are impulsive and can be harmful to oneself or others.",
+    "Subcategories": {
+    "Intermittent_Explosive_Disorder": {
+        "description": "Involves repeated, sudden episodes of impulsive, aggressive, violent behavior or angry verbal outbursts in which you react grossly out of proportion to the situation.",
+        "Tests": ["Intermittent Explosive Disorder Scale (IEDS)"]
+    }
+    }
+},
+"Social and Emotional Well-being": {
+    "description": "Refers to a person's overall psychological state, including their ability to feel, think, and act in ways that create a positive impact on their functioning and quality of life.",
+    "Subcategories": {
+    "General_Emotional_Well_being": {
+        "description": "Encompasses a person's ability to manage feelings, cope with stress, and maintain a positive outlook on life.",
+        "Tests": ["Warwick-Edinburgh Mental Well-being Scale (WEMWBS)"]
+    }
+    }
+},
+"Suicidal Tendencies": {
+    "description": "Refers to thoughts, plans, or actions related to intentionally ending one's own life. This is a serious psychiatric emergency.",
+    "Subcategories": {
+    "Suicidal_Tendencies": {
+        "description": "Involves thinking about or planning suicide. It can range from a fleeting thought to a detailed plan.",
+        "Tests": ["Columbia-Suicide Severity Rating Scale (C-SSRS)"]
+    }
+    }
+}
+}
+
+ob = ConversationService(knowledge_base)
+
+# print(ob._get_description("Suicidal Tendencies"))
+
+
+
+dic = {
+  "user_answer": "i am always depressed and anxious around people",
+  "session_data": {
+    "session_id": "8104b085-5ced-4404-a70f-db6e12d7c96d",
+    "status": "priming",
+    "ai_question_to_ask_user": "null",
+    "conversation_history": [
+      {
+        "role": "user",
+        "content": "Hi, I am very depessessed , i feel anxiety in front of people what to do"
+      },
+      {
+        "role": "assistant",
+        "content": "I'm so sorry to hear you're feeling this way. Could you share a bit about how these feelings are affecting your daily life right now?"
+      },
+            {
+        "role": "user",
+        "content": "I dont know what is happeninng but i am not getting chills time to time like smthing bad happened"
+      },
+    ],
+    "belief_state": {'Anxiety Disorders':0.8, 'Trauma and Stressor-Related Disorders':0.2},
+    "final_category": None,
+    "assessment_data": None
+  }
+
+
+
+}
+
+
+print(ob.evaluate_user_answer(dic['session_data']))
