@@ -5,9 +5,10 @@ from core_logic.Accessories.exception import CustomException
 from core_logic.Accessories.logger import logging
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.output_parsers import PydanticOutputParser
+from app.services.config import BROAD_CATERGORY_THRESHOLD, SUBCATEGORY_THRESHOLD
 
 
-from app.services.schemas import Verdict 
+from app.services.schemas import Verdict, QuestionGenerationPlan
 import os
 import json
 
@@ -18,6 +19,8 @@ class ConversationService:
         try:
             self.llm_client = llm
             self.parser = PydanticOutputParser(pydantic_object=Verdict)
+            self.structured_llm_verdict = self.llm.with_structured_output(Verdict)
+            self.structured_llm_plan = self.llm.with_structured_output(QuestionGenerationPlan) 
             logging.info("ConversationService: Gemini LLM client initialized.")
         except Exception:
             self.llm_client = None
@@ -83,69 +86,6 @@ class ConversationService:
     
 
 
-
-    def generate_differentiating_question(self, session_data: dict) -> str:
-        """
-        Args:
-            session_data: The entire, current SessionData object for the conversation.
-
-        Returns:
-            A single, empathetic, and differentiating question as a string.
-        """
-        conversation_history = session_data.get('conversation_history', [])
-
-        # --- 1. Handle Edge Cases ---
-        candidates = session_data.get('belief_state') or {}
-        if not candidates or len(candidates) < 2:
-            return "Thank you. That's very helpful. Let's move on to the next step."
-
-        top_candidates = sorted(candidates.keys(), key=lambda k: candidates[k], reverse=True)[:2]
-
-        # --- 2. Grounding: Retrieve Context from Your Knowledge Base ---
-        context_definitions = ""
-        for category in top_candidates:
-            description = self._get_description(category)
-            context_definitions += f"Theme: '{category}'\nDescription: \"{description}\"\n\n"
-
-        # --- 3. Contextualization: Format the Recent Conversation History ---
-        formatted_history = ""
-        recent_turns = conversation_history[-4:]
-        for turn in recent_turns:
-            # Convert Pydantic model to dict if necessary, or access attributes
-            role = "User" if turn.get('role') == 'user' else "AI Assistant"
-            content = turn.get('content', '')
-            formatted_history += f"{role}: {content}\n"
-
-        # --- 4. Professional, Context-Aware Prompt Engineering (This part was correct) ---
-        system_prompt = (
-            "You are a compassionate and highly skilled AI assistant, acting as a clinical intake specialist. "
-            "Your ONLY job is to continue an ongoing conversation by asking a single, clarifying question. "
-            "You are given the conversation history so far, and descriptions of the most likely psychological themes. "
-            "Your task is to generate the NEXT logical question to best differentiate between the themes, based on what the user has already said. "
-            "RULES: "
-            "1. DO NOT repeat a question that has already been asked. "
-            "2. Your question must feel like a natural continuation of the dialogue. "
-            "3. DO NOT offer advice, diagnosis, or analysis. "
-            "4. Ask the question directly, without any preamble."
-        )
-        user_prompt = (
-            f"---RECENT CONVERSATION---\n{formatted_history}\n"
-            f"---CANDIDATE THEMES TO DIFFERENTIATE---\n{context_definitions}\n"
-            f"---YOUR TASK---\nBased on the conversation so far, generate the single best follow-up question to differentiate between the candidate themes:"
-        )
-        
-        # --- 5. The LLM Call with a Safe Fallback ---
-        fallback_question = "Thank you for sharing that. To help me understand a bit better, could you tell me more about a specific time you felt this way recently?"
-        
-        # ... (The rest of the function: try/except block, LLM call, and post-processing remains the same) ...
-        try:
-            question = self._make_llm_call(system_prompt, user_prompt)
-            if not question or "Error" in question or len(question) < 15:
-                return fallback_question
-            return question.strip().strip('"')
-        except Exception as e:
-            print(f"An unexpected error occurred in generate_differentiating_question: {e}")
-            return fallback_question
 
 
 
@@ -244,53 +184,102 @@ class ConversationService:
         print(f"Belief State Updated. Reason: '{reasoning}'. New Belief: {session_data['belief_state']}")
         
         return session_data
-
-
-
-    def check_funnel_completion(self, session_data: dict) -> str | None:
-        # --- CORRECTED CODE ---
-        candidates = session_data.get('belief_state') or {}
-        if not candidates:
-            return None
-
-        # The rest of this function's logic was correct and can remain the same.
-        sorted_candidates = list(candidates.items())
-        top_candidate_name, top_candidate_score = sorted_candidates[0]
-        # ... (check thresholds) ...
-        return top_candidate_name
     
 
 
 
 
+    def check_funnel_completion(self, session_data: dict) -> str | None:
+        candidates = session_data.get('belief_state') or {}
+        status = session_data.get('status') 
+
+        if not candidates:
+            logging.info("No candidates in belief state.")
+            return None
+
+        sorted_candidates = list(candidates.items())
+        top_candidate_name, top_candidate_score = sorted_candidates[0]
+        
+        if (
+            (status == "refining_broad" and top_candidate_score >= BROAD_CATERGORY_THRESHOLD) or
+            (status == "refining_sub" and top_candidate_score >= SUBCATEGORY_THRESHOLD)
+        ):
+            return top_candidate_name
+
+        return None
+    
 
 
 
 
+    def generate_differentiating_question(self, session_data: dict) -> str:
+        """
+        SOTA "CHAIN OF THOUGHT" IMPLEMENTATION: The heart of the diagnostic funnel.
+        Forces the LLM to first reason about a strategy and then generate a question,
+        ensuring the highest possible relevance and accuracy.
+        """
+        # --- 1. Extract Context (This part is the same) ---
+        belief_state = session_data.get('belief_state') or {}
+        conversation_history = session_data.get('conversation_history', [])
+        
+        if not belief_state or len(belief_state) < 2:
+            return "Thank you for your responses. Let's move on to the final part of the assessment."
 
+        top_candidates = sorted(belief_state.keys(), key=lambda k: belief_state[k], reverse=True)[:2]
+        
+        context_definitions = ""
+        for category in top_candidates:
+            description = self._get_description(category)
+            context_definitions += f"Theme: '{category}'\nDescription: \"{description}\"\n\n"
+        
+        formatted_history = ""
+        recent_turns = conversation_history[-6:] # Use more history for better context
+        for turn in recent_turns:
+            role = "User" if turn.get('role') == 'user' else "AI Assistant"
+            content = turn.get('content', '')
+            formatted_history += f"{role}: {content}\n"
 
+        # --- 2. The Chain of Thought Prompt & Structured Output ---
+        # We will use the reliable LangChain structured output method.
+        # Make sure you have a `structured_llm_plan` instance in __init__
+        # self.structured_llm_plan = self.llm.with_structured_output(QuestionGenerationPlan)
+        
+        prompt = ChatPromptTemplate.from_messages([
+            ("system",
+             "You are a master clinical intake strategist. Your goal is to determine the most effective question to ask next to clarify a user's situation. "
+             "You will first form an internal 'reasoning' of what to probe, and then formulate the question. "
+             "Your response MUST use the 'QuestionGenerationPlan' tool."),
+            ("human",
+             "---CONVERSATION HISTORY---\n{history}\n\n"
+             "---CANDIDATE THEMES TO DIFFERENTIATE---\n{definitions}\n\n"
+             "---YOUR TASK---\n"
+             "1. **Reasoning:** Look at the user's last statement. What is the most important piece of information to get next to tell the two themes apart? Is it about timing, triggers, physical vs. emotional feelings, etc.? Write this down as your internal reasoning.\n"
+             "2. **Next Question:** Based on your reasoning, formulate the single best, empathetic, open-ended question to ask the user.")
+        ])
+        
+        chain = prompt | self.structured_llm_plan # Assume self.structured_llm_plan is defined in __init__
 
+        # --- 3. The LLM Call with a Robust Fallback ---
+        fallback_question = "Thank you for sharing that. Could you tell me a bit more about a specific time you felt this way recently?"
 
+        try:
+            plan: QuestionGenerationPlan = chain.invoke({
+                "history": formatted_history,
+                "definitions": context_definitions
+            })
+            
+            # --- 4. Log the AI's "Thought Process" ---
+            # This is incredibly valuable for debugging and demonstrating your system's intelligence.
+            print("--- AI Thought Process ---")
+            print(f"Reasoning: {plan.reasoning}")
+            print(f"Question Generated: {plan.next_question}")
+            print("--------------------------")
 
+            return plan.next_question
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        except Exception as e:
+            print(f"Chain of Thought question generation failed: {e}")
+            return fallback_question
 
 
 
@@ -459,4 +448,20 @@ dic = {
 }
 
 
-print(ob.evaluate_user_answer(dic['session_data']))
+
+# Example session_data and evaluation for testing update_belief_state
+test_session_data = {
+    "belief_state": {"Anxiety Disorders": 0.9, "Mood Disorders": 0.1},
+    "conversation_history": [],
+    "status": "refining_broad",
+    "final_category": None,
+    "assessment_data": None
+}
+test_evaluation = {
+    "supported_category": "Anxiety Disorders",
+    "confidence_score": 0.8,
+    "reasoning": "User's answer strongly supports Anxiety Disorders."
+}
+
+updated = ob.update_belief_state(test_session_data, test_evaluation)
+print("Updated session_data:", updated)

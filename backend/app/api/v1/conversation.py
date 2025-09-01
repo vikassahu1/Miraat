@@ -107,16 +107,16 @@ def respond_conversation(
     elif current_state.status == "refining_broad":
 
         evaluation = convo_service.evaluate_user_answer(current_state.model_dump())
-        updated_state = convo_service.update_belief_state(current_state, evaluation)
+        updated_state = SessionData(**convo_service.update_belief_state(current_state.model_dump(), evaluation))
 
 
         logging.info(f"Updated Belief State: {updated_state.belief_state}")
-        final_broad_category = convo_service.check_funnel_completion(updated_state)
+        final_broad_category = convo_service.check_funnel_completion(updated_state.model_dump())
 
         if final_broad_category:
             # Broad category found! Time to transition to subcategories.
             # subcategories = knowledge_base[final_broad_category]["Subcategories"]
-            subcategories = convo_service.get_subcategories(final_broad_category)
+            subcategories = convo_service._get_subcategories(final_broad_category)
             logging.info(f"Subcategories for {final_broad_category}: {subcategories.keys()}")
             
             # TRANSITION THE STATE
@@ -125,11 +125,12 @@ def respond_conversation(
 
 
     elif current_state.status == "refining_sub":
-        # Evaluate the answer against the subcategories
-        evaluation = convo_service.evaluate_user_answer(current_state)
-        updated_state = convo_service.update_belief_state(current_state, evaluation)
+        
+        evaluation = convo_service.evaluate_user_answer(current_state.model_dump())
+        updated_state = SessionData(**convo_service.update_belief_state(current_state.model_dump(), evaluation))
 
-        final_subcategory = convo_service.check_funnel_completion(updated_state)
+
+        final_subcategory = convo_service.check_funnel_completion(updated_state.model_dump())
 
         if final_subcategory:
             # Subcategory found! 
