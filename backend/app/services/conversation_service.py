@@ -1,7 +1,6 @@
 from core_logic.LLM.llm_endpoint import llm
 from core_logic.Accessories.exception import CustomException
 from core_logic.Accessories.logger import logging
-from core_logic.Accessories.exception import CustomException
 from core_logic.Accessories.logger import logging
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.output_parsers import PydanticOutputParser
@@ -11,6 +10,7 @@ from app.services.config import BROAD_CATERGORY_THRESHOLD, SUBCATEGORY_THRESHOLD
 from app.services.schemas import Verdict, QuestionGenerationPlan
 import os
 import json
+import sys
 
 
 class ConversationService:
@@ -38,7 +38,8 @@ class ConversationService:
             return response.content if hasattr(response, 'content') else str(response)
         except Exception as e:
             print(f"LLM call failed: {e}")
-            return "Error: LLM call failed."
+            logging.error(f"Error occurred: {e}")
+            raise CustomException(e, sys)
 
 
 
@@ -96,9 +97,11 @@ class ConversationService:
             print("ERROR: LLM or Parser not available for evaluation.")
             return {}
 
+        # Get the belief and conversation history from the session data 
         belief_state = session_data.get('belief_state') or {}
         conversation_history = session_data.get('conversation_history', [])
         
+        #! TODO: If belief is more less than 2 
         if len(belief_state) < 1 or len(conversation_history) < 2: return {}
 
         candidates = list(belief_state.keys())
@@ -153,6 +156,8 @@ class ConversationService:
 
 
     def update_belief_state(self, session_data: dict, evaluation: dict) -> dict:
+
+        # Extracted data from the evaluated verdict 
         supported_category = evaluation.get("supported_category")
         confidence = evaluation.get("confidence_score", 0.5) # Default to neutral confidence
         current_candidates = session_data.get('belief_state') or {}
@@ -164,6 +169,8 @@ class ConversationService:
 
         new_scores = {}
         # Apply a weighted update. A higher confidence verdict has a stronger effect.
+
+        # ! TODO: Need to tune these multipliers based on real-world testing.
         for category, score in current_candidates.items():
             if category == supported_category:
                 # Boost the winner
@@ -214,7 +221,7 @@ class ConversationService:
 
     def generate_differentiating_question(self, session_data: dict) -> str:
         """
-        SOTA "CHAIN OF THOUGHT" IMPLEMENTATION: The heart of the diagnostic funnel.
+        "CHAIN OF THOUGHT" IMPLEMENTATION: The heart of the diagnostic funnel.
         Forces the LLM to first reason about a strategy and then generate a question,
         ensuring the highest possible relevance and accuracy.
         """
@@ -222,16 +229,20 @@ class ConversationService:
         belief_state = session_data.get('belief_state') or {}
         conversation_history = session_data.get('conversation_history', [])
         
+        # We may proceed to render test for final assessment if just one
         if not belief_state or len(belief_state) < 2:
             return "Thank you for your responses. Let's move on to the final part of the assessment."
 
+        # Top 2 candidates
         top_candidates = sorted(belief_state.keys(), key=lambda k: belief_state[k], reverse=True)[:2]
         
+        # Preparing the context definitions (Disorder : Discription) of disorder for the prompt
         context_definitions = ""
         for category in top_candidates:
             description = self._get_description(category)
             context_definitions += f"Theme: '{category}'\nDescription: \"{description}\"\n\n"
         
+        # Preparing the formatted conversation for the prompt
         formatted_history = ""
         recent_turns = conversation_history[-6:] # Use more history for better context
         for turn in recent_turns:
@@ -240,9 +251,8 @@ class ConversationService:
             formatted_history += f"{role}: {content}\n"
 
         # --- 2. The Chain of Thought Prompt & Structured Output ---
-        # We will use the reliable LangChain structured output method.
-        # Make sure you have a `structured_llm_plan` instance in __init__
-        # self.structured_llm_plan = self.llm.with_structured_output(QuestionGenerationPlan)
+        # Reliable LangChain structured output method.
+        # Make sure you have self.structured_llm_plan = self.llm.with_structured_output(QuestionGenerationPlan)
         
         prompt = ChatPromptTemplate.from_messages([
             ("system",
@@ -269,7 +279,7 @@ class ConversationService:
             })
             
             # --- 4. Log the AI's "Thought Process" ---
-            # This is incredibly valuable for debugging and demonstrating your system's intelligence.
+            # Valuable for debugging and demonstrating your system's intelligence.
             print("--- AI Thought Process ---")
             print(f"Reasoning: {plan.reasoning}")
             print(f"Question Generated: {plan.next_question}")
@@ -412,56 +422,56 @@ if __name__ == "__main__":
 }
 }
 
-ob = ConversationService(knowledge_base)
+# ob = ConversationService(knowledge_base)
 
-# print(ob._get_description("Suicidal Tendencies"))
-
-
-
-dic = {
-  "user_answer": "i am always depressed and anxious around people",
-  "session_data": {
-    "session_id": "8104b085-5ced-4404-a70f-db6e12d7c96d",
-    "status": "priming",
-    "ai_question_to_ask_user": "null",
-    "conversation_history": [
-      {
-        "role": "user",
-        "content": "Hi, I am very depessessed , i feel anxiety in front of people what to do"
-      },
-      {
-        "role": "assistant",
-        "content": "I'm so sorry to hear you're feeling this way. Could you share a bit about how these feelings are affecting your daily life right now?"
-      },
-            {
-        "role": "user",
-        "content": "when i see group of people I start trembling specially girls"
-      },
-    ],
-    "belief_state": {'Anxiety Disorders':0.8, 'Trauma and Stressor-Related Disorders':0.2},
-    "final_category": None,
-    "assessment_data": None
-  }
+# # print(ob._get_description("Suicidal Tendencies"))
 
 
 
-}
+# dic = {
+#   "user_answer": "i am always depressed and anxious around people",
+#   "session_data": {
+#     "session_id": "8104b085-5ced-4404-a70f-db6e12d7c96d",
+#     "status": "priming",
+#     "ai_question_to_ask_user": "null",
+#     "conversation_history": [
+#       {
+#         "role": "user",
+#         "content": "Hi, I am very depessessed , i feel anxiety in front of people what to do"
+#       },
+#       {
+#         "role": "assistant",
+#         "content": "I'm so sorry to hear you're feeling this way. Could you share a bit about how these feelings are affecting your daily life right now?"
+#       },
+#             {
+#         "role": "user",
+#         "content": "when i see group of people I start trembling specially girls"
+#       },
+#     ],
+#     "belief_state": {'Anxiety Disorders':0.8, 'Trauma and Stressor-Related Disorders':0.2},
+#     "final_category": None,
+#     "assessment_data": None
+#   }
 
 
 
-# Example session_data and evaluation for testing update_belief_state
-test_session_data = {
-    "belief_state": {"Anxiety Disorders": 0.9, "Mood Disorders": 0.1},
-    "conversation_history": [],
-    "status": "refining_broad",
-    "final_category": None,
-    "assessment_data": None
-}
-test_evaluation = {
-    "supported_category": "Anxiety Disorders",
-    "confidence_score": 0.8,
-    "reasoning": "User's answer strongly supports Anxiety Disorders."
-}
+# }
 
-updated = ob.update_belief_state(test_session_data, test_evaluation)
-print("Updated session_data:", updated)
+
+
+# # Example session_data and evaluation for testing update_belief_state
+# test_session_data = {
+#     "belief_state": {"Anxiety Disorders": 0.9, "Mood Disorders": 0.1},
+#     "conversation_history": [],
+#     "status": "refining_broad",
+#     "final_category": None,
+#     "assessment_data": None
+# }
+# test_evaluation = {
+#     "supported_category": "Anxiety Disorders",
+#     "confidence_score": 0.8,
+#     "reasoning": "User's answer strongly supports Anxiety Disorders."
+# }
+
+# updated = ob.update_belief_state(test_session_data, test_evaluation)
+# print("Updated session_data:", updated)
