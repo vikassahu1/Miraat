@@ -79,6 +79,7 @@ def respond_conversation(
     convo_service: ConversationService = Depends(get_conversation_service),
     triage_service: TriageService = Depends(get_triage_service) 
 ):
+    logging.info(f"Received user response: {request.user_answer}")
     current_state = request.session_data
     current_state.conversation_history.append(
         ConversationTurn(role="user", content=request.user_answer)
@@ -87,6 +88,8 @@ def respond_conversation(
     
     if current_state.status == "priming":
         # initial triage.
+        logging.info("Performing initial triage, in phase priming.")
+
         user_text_full = " ".join(
             turn.content for turn in current_state.conversation_history if turn.role == 'user'
         )
@@ -97,54 +100,70 @@ def respond_conversation(
             raise HTTPException(status_code=500, detail="Triage failed to produce hypotheses.")
 
         logging.info(f"Initial Hypotheses: {hypotheses}")
+
+         # Normalisation of scores 
+        raw_scores = {h['category']: h['score'] for h in hypotheses}
+    
+        total_score = sum(raw_scores.values())
+
+        normalized_belief_state = {}
+
+        if total_score > 0:
+            # Divide each score by the total sum to get a probability
+            normalized_belief_state = {
+                category: score / total_score 
+                for category, score in raw_scores.items()
+            }
+       
+        print(f"Normalized Belief State (sums to 1.0): {normalized_belief_state}")
+        logging.info(f"Normalized Belief State (sums to 1.0): {normalized_belief_state}")
+
         
         # Updating State 
         current_state.status = "refining_broad"
-        current_state.belief_state = {h['category']: h['score'] for h in hypotheses}
+        current_state.belief_state = normalized_belief_state
         
         updated_state = current_state
     
     elif current_state.status == "refining_broad":
-
         evaluation = convo_service.evaluate_user_answer(current_state.model_dump())
-        updated_state = SessionData(**convo_service.update_belief_state(current_state.model_dump(), evaluation))
-
-
-        logging.info(f"Updated Belief State: {updated_state.belief_state}")
-        final_broad_category = convo_service.check_funnel_completion(updated_state.model_dump())
-
+        updated_state = convo_service.update_belief_state(current_state.model_dump(), evaluation)
+        logging.info("Evaluating broad categories and updating the belief state.")
+        logging.info(f"Updated Belief State: {updated_state['belief_state']}")
+        final_broad_category = convo_service.check_funnel_completion(updated_state)
         if final_broad_category:
             # Broad category found! Time to transition to subcategories.
-            # subcategories = knowledge_base[final_broad_category]["Subcategories"]
+            logging.info(f"Final Broad Category Identified: {final_broad_category}")
             subcategories = convo_service._get_subcategories(final_broad_category)
-            logging.info(f"Subcategories for {final_broad_category}: {subcategories.keys()}")
-            
-            # TRANSITION THE STATE
-            updated_state.status = "refining_sub"
-            updated_state.belief_state = {subcat: 1.0/len(subcategories) for subcat in subcategories.keys()}
 
+            print(f"Subcategories for {final_broad_category}: {subcategories}")
+            logging.info(f"Subcategories for {final_broad_category}: {subcategories}")
+            print(f"Type of subcatagories: {type(subcategories)}")
+            logging.info(f"Type of subcatagories: {type(subcategories)}")
+
+
+            logging.info(f"Subcategories for {final_broad_category}: {subcategories}")
+            # TRANSITION THE STATE
+            updated_state['status'] = "refining_sub"
+            updated_state['belief_state'] = {subcat: 1.0/len(subcategories) for subcat in subcategories}
 
     elif current_state.status == "refining_sub":
-        
+        logging.info("Refining subcategories.")
         evaluation = convo_service.evaluate_user_answer(current_state.model_dump())
-        updated_state = SessionData(**convo_service.update_belief_state(current_state.model_dump(), evaluation))
-
-
-        final_subcategory = convo_service.check_funnel_completion(updated_state.model_dump())
-
+        updated_state = convo_service.update_belief_state(current_state.model_dump(), evaluation)
+        logging.info(f"Updated Belief State: {updated_state['belief_state']}")
+        final_subcategory = convo_service.check_funnel_completion(updated_state)
         if final_subcategory:
             # Subcategory found! 
             # TRANSITION THE STATE
-            updated_state.status = "assessing"
-            updated_state.final_category = final_subcategory
+            updated_state['status'] = "assessing"
+            updated_state['final_category'] = final_subcategory
             return {"status": "assessment_ready", "session_data": updated_state}
-        
-    
 
+    logging.info(f"Passeed through state functions, Current Status: {updated_state['status']}")
     next_question = convo_service.generate_differentiating_question(updated_state)
-    updated_state.ai_question_to_ask_user = next_question
-    updated_state.conversation_history.append(
+    updated_state['ai_question_to_ask_user'] = next_question
+    updated_state['conversation_history'].append(
         ConversationTurn(role="assistant", content=next_question)
     )
-    
     return {"status": "in_progress", "ai_question": next_question, "session_data": updated_state}

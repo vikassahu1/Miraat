@@ -19,12 +19,14 @@ class ConversationService:
         try:
             self.llm_client = llm
             self.parser = PydanticOutputParser(pydantic_object=Verdict)
-            self.structured_llm_verdict = self.llm.with_structured_output(Verdict)
-            self.structured_llm_plan = self.llm.with_structured_output(QuestionGenerationPlan) 
+            self.structured_llm_verdict = self.llm_client.with_structured_output(Verdict)
+            self.structured_llm_plan = self.llm_client.with_structured_output(QuestionGenerationPlan) 
             logging.info("ConversationService: Gemini LLM client initialized.")
         except Exception:
             self.llm_client = None
             self.parser = None
+            self.structured_llm_verdict = None
+            self.structured_llm_plan = None
             logging.info("ConversationService: Could not initialize Gemini LLM client.")
 
 
@@ -101,7 +103,7 @@ class ConversationService:
         belief_state = session_data.get('belief_state') or {}
         conversation_history = session_data.get('conversation_history', [])
         
-        #! TODO: If belief is more less than 2 
+        # TODO: If belief is more less than 2 
         if len(belief_state) < 1 or len(conversation_history) < 2: return {}
 
         candidates = list(belief_state.keys())
@@ -170,7 +172,7 @@ class ConversationService:
         new_scores = {}
         # Apply a weighted update. A higher confidence verdict has a stronger effect.
 
-        # ! TODO: Need to tune these multipliers based on real-world testing.
+        #  TODO: Need to tune these multipliers based on real-world testing.
         for category, score in current_candidates.items():
             if category == supported_category:
                 # Boost the winner
@@ -296,6 +298,7 @@ class ConversationService:
 
 
 if __name__ == "__main__":
+
     knowledge_base = {"Mood Disorders": {
     "description": "Characterized by significant and persistent disturbances in mood and emotional state, ranging from extreme sadness (depression) to extreme elation (mania).",
     "Subcategories": {
@@ -307,171 +310,201 @@ if __name__ == "__main__":
         "description": "Involves extreme mood swings that include emotional highs (mania or hypomania) and lows (depression).",
         "Tests": ["Mood Disorder Questionnaire (MDQ)"]
     }
-    }
-},
-"Anxiety Disorders": {
-    "description": "Characterized by intense, excessive, and persistent worry and fear about everyday situations, often involving repeated episodes of sudden intense anxiety and terror (panic attacks).",
-    "Subcategories": {
-    "Generalized_Anxiety_Disorder": {
-        "description": "Marked by persistent and excessive worry about a number of different things, often anticipating disaster and being overly concerned about money, health, family, or work.",
-        "Tests": ["Generalized Anxiety Disorder 7 (GAD-7)"]
+        }
     },
-    "Social_Anxiety_Disorder": {
-        "description": "Involves a significant amount of fear, anxiety, and avoidance of social situations due to feelings of embarrassment, self-consciousness, and concern about being judged by others.",
-        "Tests": ["Liebowitz Social Anxiety Scale (LSAS)"]
-    }
-    }
-},
-"Trauma and Stressor-Related Disorders": {
-    "description": "Involves exposure to a traumatic or stressful event. Symptoms include intrusive memories, avoidance, negative changes in mood and thinking, and altered arousal and reactivity.",
-    "Subcategories": {
-    "Post_Traumatic_Stress_Disorder": {
-        "description": "A disorder that develops in some people who have experienced a shocking, scary, or dangerous event. Symptoms include flashbacks, nightmares, and severe anxiety.",
-        "Tests": ["PTSD Checklist for DSM-5 (PCL-5)"]
-    }
-    }
-},
-"Obsessive-Compulsive Disorder (OCD)": {
-    "description": "Characterized by a pattern of unwanted thoughts and fears (obsessions) that lead you to do repetitive behaviors (compulsions).",
-    "Subcategories": {
-    "Obsessive_Compulsive_Disorder": {
-        "description": "Features recurring, unwanted thoughts, ideas, or sensations (obsessions) that make a person feel driven to do something repetitively (compulsions).",
-        "Tests": ["Yale-Brown Obsessive-Compulsive Scale (Y-BOCS)"]
-    }
-    }
-},
-"Personality Disorders": {
-    "description": "Involves a rigid and unhealthy pattern of thinking, functioning, and behaving, causing significant problems and limitations in relationships, social activities, work, and school.",
-    "Subcategories": {
-    "Borderline_Personality_Disorder": {
-        "description": "Marked by a pattern of ongoing instability in moods, behavior, self-image, and functioning. This often results in impulsive actions and unstable relationships.",
-        "Tests": ["McLean Screening Instrument for Borderline Personality Disorder (MSI-BPD)"]
-    }
-    }
-},
-"Eating Disorders": {
-    "description": "Serious conditions related to persistent eating behaviors that negatively impact health, emotions, and the ability to function in important areas of life.",
-    "Subcategories": {
-    "Eating_Disorders": {
-        "description": "Characterized by severe disturbances in eating behavior and related thoughts and emotions, such as an unhealthy preoccupation with body weight and food.",
-        "Tests": ["Eating Attitudes Test (EAT-26)"]
-    }
-    }
-},
-"Substance Use Disorders": {
-    "description": "A disease that affects a person's brain and behavior and leads to an inability to control the use of a legal or illegal drug or medicine.",
-    "Subcategories": {
-    "Alcohol_Use_Disorder": {
-        "description": "A medical condition characterized by an impaired ability to stop or control alcohol use despite adverse social, occupational, or health consequences.",
-        "Tests": ["Alcohol Use Disorders Identification Test (AUDIT)"]
+    "Anxiety Disorders": {
+        "description": "Characterized by intense, excessive, and persistent worry and fear about everyday situations, often involving repeated episodes of sudden intense anxiety and terror (panic attacks).",
+        "Subcategories": {
+        "Generalized_Anxiety_Disorder": {
+            "description": "Marked by persistent and excessive worry about a number of different things, often anticipating disaster and being overly concerned about money, health, family, or work.",
+            "Tests": ["Generalized Anxiety Disorder 7 (GAD-7)"]
+        },
+        "Social_Anxiety_Disorder": {
+            "description": "Involves a significant amount of fear, anxiety, and avoidance of social situations due to feelings of embarrassment, self-consciousness, and concern about being judged by others.",
+            "Tests": ["Liebowitz Social Anxiety Scale (LSAS)"]
+        }
+        }
     },
-    "Drug_Use_Disorders": {
-        "description": "Involves the compulsive seeking and use of drugs despite harmful consequences. It is considered a brain disorder because it involves functional changes to brain circuits involved in reward, stress, and self-control.",
-        "Tests": ["Drug Abuse Screening Test (DAST-10)"]
-    }
-    }
-},
-"Psychotic Disorders": {
-    "description": "Severe mental disorders that cause abnormal thinking and perceptions. People with psychoses lose touch with reality. Two of the main symptoms are delusions and hallucinations.",
-    "Subcategories": {
-    "Schizophrenia": {
-        "description": "A serious mental disorder in which people interpret reality abnormally. It may result in hallucinations, delusions, and extremely disordered thinking and behavior that impairs daily functioning.",
-        "Tests": ["Positive and Negative Syndrome Scale (PANSS - Shortened Version)"]
-    }
-    }
-},
-"Neurodevelopmental Disorders": {
-    "description": "A group of conditions with onset in the developmental period. They typically manifest early in development, often before the child enters grade school, and are characterized by developmental deficits that produce impairments of personal, social, academic, or occupational functioning.",
-    "Subcategories": {
-    "Autism_Spectrum_Disorder": {
-        "description": "A complex developmental condition involving persistent challenges in social interaction, speech and nonverbal communication, and restricted/repetitive behaviors.",
-        "Tests": ["Autism Spectrum Rating Scales (ASRS - Short Version)"]
+    "Trauma and Stressor-Related Disorders": {
+        "description": "Involves exposure to a traumatic or stressful event. Symptoms include intrusive memories, avoidance, negative changes in mood and thinking, and altered arousal and reactivity.",
+        "Subcategories": {
+        "Post_Traumatic_Stress_Disorder": {
+            "description": "A disorder that develops in some people who have experienced a shocking, scary, or dangerous event. Symptoms include flashbacks, nightmares, and severe anxiety.",
+            "Tests": ["PTSD Checklist for DSM-5 (PCL-5)"]
+        }
+        }
     },
-    "Attention_Deficit_Hyperactivity_Disorder": {
-        "description": "A chronic condition including attention difficulty, hyperactivity, and impulsiveness.",
-        "Tests": ["Vanderbilt ADHD Diagnostic Rating Scale (VADRS)"]
+    "Obsessive-Compulsive Disorder (OCD)": {
+        "description": "Characterized by a pattern of unwanted thoughts and fears (obsessions) that lead you to do repetitive behaviors (compulsions).",
+        "Subcategories": {
+        "Obsessive_Compulsive_Disorder": {
+            "description": "Features recurring, unwanted thoughts, ideas, or sensations (obsessions) that make a person feel driven to do something repetitively (compulsions).",
+            "Tests": ["Yale-Brown Obsessive-Compulsive Scale (Y-BOCS)"]
+        }
+        }
+    },
+    "Personality Disorders": {
+        "description": "Involves a rigid and unhealthy pattern of thinking, functioning, and behaving, causing significant problems and limitations in relationships, social activities, work, and school.",
+        "Subcategories": {
+        "Borderline_Personality_Disorder": {
+            "description": "Marked by a pattern of ongoing instability in moods, behavior, self-image, and functioning. This often results in impulsive actions and unstable relationships.",
+            "Tests": ["McLean Screening Instrument for Borderline Personality Disorder (MSI-BPD)"]
+        }
+        }
+    },
+    "Eating Disorders": {
+        "description": "Serious conditions related to persistent eating behaviors that negatively impact health, emotions, and the ability to function in important areas of life.",
+        "Subcategories": {
+        "Eating_Disorders": {
+            "description": "Characterized by severe disturbances in eating behavior and related thoughts and emotions, such as an unhealthy preoccupation with body weight and food.",
+            "Tests": ["Eating Attitudes Test (EAT-26)"]
+        }
+        }
+    },
+    "Substance Use Disorders": {
+        "description": "A disease that affects a person's brain and behavior and leads to an inability to control the use of a legal or illegal drug or medicine.",
+        "Subcategories": {
+        "Alcohol_Use_Disorder": {
+            "description": "A medical condition characterized by an impaired ability to stop or control alcohol use despite adverse social, occupational, or health consequences.",
+            "Tests": ["Alcohol Use Disorders Identification Test (AUDIT)"]
+        },
+        "Drug_Use_Disorders": {
+            "description": "Involves the compulsive seeking and use of drugs despite harmful consequences. It is considered a brain disorder because it involves functional changes to brain circuits involved in reward, stress, and self-control.",
+            "Tests": ["Drug Abuse Screening Test (DAST-10)"]
+        }
+        }
+    },
+    "Psychotic Disorders": {
+        "description": "Severe mental disorders that cause abnormal thinking and perceptions. People with psychoses lose touch with reality. Two of the main symptoms are delusions and hallucinations.",
+        "Subcategories": {
+        "Schizophrenia": {
+            "description": "A serious mental disorder in which people interpret reality abnormally. It may result in hallucinations, delusions, and extremely disordered thinking and behavior that impairs daily functioning.",
+            "Tests": ["Positive and Negative Syndrome Scale (PANSS - Shortened Version)"]
+        }
+        }
+    },
+    "Neurodevelopmental Disorders": {
+        "description": "A group of conditions with onset in the developmental period. They typically manifest early in development, often before the child enters grade school, and are characterized by developmental deficits that produce impairments of personal, social, academic, or occupational functioning.",
+        "Subcategories": {
+        "Autism_Spectrum_Disorder": {
+            "description": "A complex developmental condition involving persistent challenges in social interaction, speech and nonverbal communication, and restricted/repetitive behaviors.",
+            "Tests": ["Autism Spectrum Rating Scales (ASRS - Short Version)"]
+        },
+        "Attention_Deficit_Hyperactivity_Disorder": {
+            "description": "A chronic condition including attention difficulty, hyperactivity, and impulsiveness.",
+            "Tests": ["Vanderbilt ADHD Diagnostic Rating Scale (VADRS)"]
+        }
+        }
+    },
+    "Impulse Control Disorders": {
+        "description": "Conditions in which a person has trouble controlling emotions or behaviors. Often, the behaviors are impulsive and can be harmful to oneself or others.",
+        "Subcategories": {
+        "Intermittent_Explosive_Disorder": {
+            "description": "Involves repeated, sudden episodes of impulsive, aggressive, violent behavior or angry verbal outbursts in which you react grossly out of proportion to the situation.",
+            "Tests": ["Intermittent Explosive Disorder Scale (IEDS)"]
+        }
+        }
+    },
+    "Social and Emotional Well-being": {
+        "description": "Refers to a person's overall psychological state, including their ability to feel, think, and act in ways that create a positive impact on their functioning and quality of life.",
+        "Subcategories": {
+        "General_Emotional_Well_being": {
+            "description": "Encompasses a person's ability to manage feelings, cope with stress, and maintain a positive outlook on life.",
+            "Tests": ["Warwick-Edinburgh Mental Well-being Scale (WEMWBS)"]
+        }
+        }
+    },
+    "Suicidal Tendencies": {
+        "description": "Refers to thoughts, plans, or actions related to intentionally ending one's own life. This is a serious psychiatric emergency.",
+        "Subcategories": {
+        "Suicidal_Tendencies": {
+            "description": "Involves thinking about or planning suicide. It can range from a fleeting thought to a detailed plan.",
+            "Tests": ["Columbia-Suicide Severity Rating Scale (C-SSRS)"]
+        }
+        }
     }
     }
-},
-"Impulse Control Disorders": {
-    "description": "Conditions in which a person has trouble controlling emotions or behaviors. Often, the behaviors are impulsive and can be harmful to oneself or others.",
-    "Subcategories": {
-    "Intermittent_Explosive_Disorder": {
-        "description": "Involves repeated, sudden episodes of impulsive, aggressive, violent behavior or angry verbal outbursts in which you react grossly out of proportion to the situation.",
-        "Tests": ["Intermittent Explosive Disorder Scale (IEDS)"]
+
+    ob = ConversationService(knowledge_base)
+
+    # # print(ob._get_description("Suicidal Tendencies"))
+
+
+
+    dic = {
+    "user_answer": "i am always depressed and anxious around people",
+    "session_data": {
+        "session_id": "8104b085-5ced-4404-a70f-db6e12d7c96d",
+        "status": "priming",
+        "ai_question_to_ask_user": "null",
+        "conversation_history": [
+        {
+            "role": "user",
+            "content": "Hi, I am very depessessed , i feel anxiety in front of people what to do"
+        },
+        {
+            "role": "assistant",
+            "content": "I'm so sorry to hear you're feeling this way. Could you share a bit about how these feelings are affecting your daily life right now?"
+        },
+                {
+            "role": "user",
+            "content": "when i see group of people I start trembling specially girls"
+        },
+        ],
+        "belief_state": {'Anxiety Disorders':0.8, 'Trauma and Stressor-Related Disorders':0.2},
+        "final_category": None,
+        "assessment_data": None
     }
     }
-},
-"Social and Emotional Well-being": {
-    "description": "Refers to a person's overall psychological state, including their ability to feel, think, and act in ways that create a positive impact on their functioning and quality of life.",
-    "Subcategories": {
-    "General_Emotional_Well_being": {
-        "description": "Encompasses a person's ability to manage feelings, cope with stress, and maintain a positive outlook on life.",
-        "Tests": ["Warwick-Edinburgh Mental Well-being Scale (WEMWBS)"]
+
+
+
+    demo_session  = {
+        "session_id": "8104b085-5ced-4404-a70f-db6e12d7c96d",
+        "status": "priming",
+        "ai_question_to_ask_user": "null",
+        "conversation_history": [
+        {
+            "role": "user",
+            "content": "Hi, I am very depessessed , i feel anxiety in front of people what to do"
+        },
+        {
+            "role": "assistant",
+            "content": "I'm so sorry to hear you're feeling this way. Could you share a bit about how these feelings are affecting your daily life right now?"
+        },
+            {
+            "role": "user",
+            "content": "when i see group of people I start trembling specially girls"
+        }
+        ],
+        "belief_state": {'Anxiety Disorders':0.8, 'Trauma and Stressor-Related Disorders':0.2},
+        "final_category": None,
+        "assessment_data": None
     }
-    }
-},
-"Suicidal Tendencies": {
-    "description": "Refers to thoughts, plans, or actions related to intentionally ending one's own life. This is a serious psychiatric emergency.",
-    "Subcategories": {
-    "Suicidal_Tendencies": {
-        "description": "Involves thinking about or planning suicide. It can range from a fleeting thought to a detailed plan.",
-        "Tests": ["Columbia-Suicide Severity Rating Scale (C-SSRS)"]
-    }
-    }
-}
-}
-
-# ob = ConversationService(knowledge_base)
-
-# # print(ob._get_description("Suicidal Tendencies"))
 
 
 
-# dic = {
-#   "user_answer": "i am always depressed and anxious around people",
-#   "session_data": {
-#     "session_id": "8104b085-5ced-4404-a70f-db6e12d7c96d",
-#     "status": "priming",
-#     "ai_question_to_ask_user": "null",
-#     "conversation_history": [
-#       {
-#         "role": "user",
-#         "content": "Hi, I am very depessessed , i feel anxiety in front of people what to do"
-#       },
-#       {
-#         "role": "assistant",
-#         "content": "I'm so sorry to hear you're feeling this way. Could you share a bit about how these feelings are affecting your daily life right now?"
-#       },
-#             {
-#         "role": "user",
-#         "content": "when i see group of people I start trembling specially girls"
-#       },
-#     ],
-#     "belief_state": {'Anxiety Disorders':0.8, 'Trauma and Stressor-Related Disorders':0.2},
-#     "final_category": None,
-#     "assessment_data": None
-#   }
+    print(ob.generate_differentiating_question(demo_session))
 
 
 
-# }
 
 
+    # # Example session_data and evaluation for testing update_belief_state
+    # test_session_data = {
+    #     "belief_state": {"Anxiety Disorders": 0.9, "Mood Disorders": 0.1},
+    #     "conversation_history": [],
+    #     "status": "refining_broad",
+    #     "final_category": None,
+    #     "assessment_data": None
+    # }
+    # test_evaluation = {
+    #     "supported_category": "Anxiety Disorders",
+    #     "confidence_score": 0.8,
+    #     "reasoning": "User's answer strongly supports Anxiety Disorders."
+    # }
 
-# # Example session_data and evaluation for testing update_belief_state
-# test_session_data = {
-#     "belief_state": {"Anxiety Disorders": 0.9, "Mood Disorders": 0.1},
-#     "conversation_history": [],
-#     "status": "refining_broad",
-#     "final_category": None,
-#     "assessment_data": None
-# }
-# test_evaluation = {
-#     "supported_category": "Anxiety Disorders",
-#     "confidence_score": 0.8,
-#     "reasoning": "User's answer strongly supports Anxiety Disorders."
-# }
+    # updated = ob.update_belief_state(test_session_data, test_evaluation)
+    # print("Updated session_data:", updated)
 
-# updated = ob.update_belief_state(test_session_data, test_evaluation)
-# print("Updated session_data:", updated)
+
