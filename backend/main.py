@@ -571,13 +571,21 @@ def get_test_history(user_name: str, db: Session = Depends(get_db)):
 # <---  PHASE  2 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------->
 
 from app.api.v1 import conversation as conversation_api
+from app.api.v1 import assessment as assessment_api
 from app.services.conversation_service import ConversationService
 from app.services.triage_service import TriageService
+from app.services.assessment_service import AssessmentService
+from app.services.report_service import FinalReportService
 # ... (import other services as you build them) ...
 
 
 
+
+# Getting the json data
 KB_PATH = os.path.join(os.path.dirname(__file__), 'core_logic', 'Assessment','mapping.json')
+ABBR_PATH = os.path.join(os.path.dirname(__file__), 'core_logic', 'Assessment','abbreviation_map.json')
+TESTDATA_PATH = os.path.join(os.path.dirname(__file__), 'core_logic', 'Assessment','test_data.json')
+
 try:
     with open(KB_PATH) as f:
         KNOWLEDGE_BASE = json.load(f)["Mental_Health_Tests"]
@@ -587,11 +595,30 @@ except FileNotFoundError:
     KNOWLEDGE_BASE = {} # App will still run but with limited functionality
 
 
+try:
+    with open(ABBR_PATH) as f:
+        ABBREVIATION_MAP = json.load(f)
+    print("Abbreviation Map loaded successfully.")
+except FileNotFoundError:
+    print(f"FATAL ERROR: Abbreviation Map file not found at {ABBR_PATH}")
+    ABBREVIATION_MAP = {} # App will still run but with limited functionality
+
+
+try:
+    with open(TESTDATA_PATH) as f:
+        TEST_DATA = json.load(f)
+    print("Test Data loaded successfully.")
+except FileNotFoundError:
+    print(f"FATAL ERROR: Test Data file not found at {TESTDATA_PATH}")
+    TEST_DATA = {} # App will still run but with limited functionality
+
+
 
 # These are the single, shared instances of each service used by the API.
 conversation_service_instance = ConversationService(knowledge_base=KNOWLEDGE_BASE)
 triage_service_instance = TriageService(categories=list(KNOWLEDGE_BASE.keys()))
-
+report_service_instance = FinalReportService(convo_service=conversation_service_instance)
+assessment_service_instance = AssessmentService(knowledge_base=KNOWLEDGE_BASE, test_data=TEST_DATA, abbr_map=ABBREVIATION_MAP, report_service=report_service_instance) 
 # app = FastAPI(title="Miraat V3 API")
 
 # --- Dependency Injection Wiring ---
@@ -603,10 +630,16 @@ def get_conversation_service_instance_override():
 def get_triage_service_instance_override(): 
     return triage_service_instance
 
+def get_assessment_service_instance_override(): # <-- ADD THIS FUNCTION
+    return assessment_service_instance
+
 app.dependency_overrides[conversation_api.get_conversation_service] = get_conversation_service_instance_override
 app.dependency_overrides[conversation_api.get_triage_service] = get_triage_service_instance_override
+app.dependency_overrides[assessment_api.get_assessment_service] = get_assessment_service_instance_override 
+
 
 app.include_router(conversation_api.router, prefix="/api/v1/conversation", tags=["Conversation"])
+app.include_router(assessment_api.router, prefix="/api/v1/assessment", tags=["Assessment"])
 
 
 

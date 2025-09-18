@@ -12,16 +12,22 @@ class AssessmentQuestion(BaseModel):
     id: str
     text: str
 
-class AssessmentData(BaseModel):
-    """Holds the state of the final assessment phase."""
-    test_name: str
-    questions: List[AssessmentQuestion]
-    answers: Dict[str, Any] = {} # e.g., {"q1": 3, "q2": 1}
-    current_question_index: int = 0
-    final_score: Optional[float] = None
-    summary: Optional[str] = None
 
+# It will now store the result of the assessment.
+class AssessmentReport(BaseModel):
+    test_name: str
+    answers: Dict[str, int] # e.g., {"gad7_q1": 2, "gad7_q2": 3}
+    final_score: float
+    interpretation: str # The clinical severity, e.g., "Moderate anxiety"
+    summary: str # The final LLM-generated narrative
+
+
+class Pair(BaseModel):
+    first: Any
+    second: Any
 # --- The Main State Object ---
+
+
 
 class SessionData(BaseModel):
     """
@@ -51,7 +57,7 @@ class SessionData(BaseModel):
     final_category: Optional[str] = None
     
     # The data related to the final standardized test phase.
-    assessment_data: Optional[AssessmentData] = None
+    assessment_data: Optional[AssessmentReport] = None
 
 
 # --- API Endpoint Request/Response Models ---
@@ -86,3 +92,30 @@ class Verdict(BaseModel):
 class QuestionGenerationPlan(BaseModel):
     reasoning: str = Field(description="A brief, internal thought process. Analyze the user's last statement and the candidate descriptions to identify the key differentiating feature to probe next.")
     next_question: str = Field(description="The final, single, empathetic question to ask the user based on the reasoning.")
+
+
+# Assessment Models
+class AssessmentRequest(BaseModel):
+    # The UI only needs to send the final category to start the test
+    final_category: str
+
+class SubmitRequest(BaseModel):
+    session_data: SessionData
+    answers: Dict[str, int] # e.g. {"gad7_q1": 2, "gad7_q2": 3, ...}
+
+class QuestionData(BaseModel):
+    question_id: int
+    question_text: str
+    options: List[Dict[str, Any]] # e.g., [{"option": "Not at all", "value": 0}, ...]
+
+class TestData(BaseModel):
+    test_name: str
+    test_data: List[QuestionData]
+
+
+# Question id: Answer 
+class AssessmentSubmitRequest(BaseModel):
+    session_data: SessionData
+    answers: Dict[str, int]
+
+
