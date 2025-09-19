@@ -13,13 +13,30 @@ class AssessmentQuestion(BaseModel):
     text: str
 
 
+class FinalReport(BaseModel):
+    """
+    A simple yet comprehensive final report with four distinct, easy-to-render text sections.
+    """
+    # Section 1: The personal connection
+    opening_summary: str = Field(description="A warm, empathetic paragraph that acknowledges the user's specific feelings by referencing their own words from the conversation.")
+    
+    # Section 2: The factual results
+    assessment_findings: str = Field(description="A clear, factual paragraph detailing the assessment results, including the test name, the user's score, and the clinical interpretation.")
+    
+    # Section 3: The path forward
+    recommended_steps: str = Field(description="A paragraph offering 2-3 general, safe, and actionable next steps, formatted as a simple list within the text.")
+    
+    # Section 4: The mandatory disclaimer
+    disclaimer: str = Field(description="The mandatory disclaimer statement.", default="This assessment is a supportive tool and is not a substitute for a formal diagnosis or consultation with a qualified healthcare professional. Please consult a doctor or mental health provider for any health concerns.")
+
+
 # It will now store the result of the assessment.
 class AssessmentReport(BaseModel):
     test_name: str
     answers: Dict[str, int] # e.g., {"gad7_q1": 2, "gad7_q2": 3}
     final_score: float
     interpretation: str # The clinical severity, e.g., "Moderate anxiety"
-    summary: str # The final LLM-generated narrative
+    narrative_report: Optional[FinalReport] = None
 
 
 class Pair(BaseModel):
