@@ -1,0 +1,18 @@
+<div class="prose max-w-none p-4 animate-fade-in">
+    <h1>Your Assessment Summary</h1>
+    <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+        <h3>A Gentle Opening</h3>
+        <p>{{ report.opening_summary }}</p>
+    </div>
+    <div class="mt-6 p-4 bg-white rounded-lg shadow-sm">
+        <h3>Assessment Findings</h3>
+        <p>{{ report.assessment_findings }}</p>
+    </div>
+    <div class="mt-6 p-4 bg-green-50 rounded-lg">
+        <h3>Recommended Next Steps</h3>
+        <p>{{ report.recommended_steps }}</p>
+    </div>
+    <div class="mt-8 text-sm">
+        <p><strong>Disclaimer:</strong> {{ report.disclaimer }}</p>
+    </div>
+</div>

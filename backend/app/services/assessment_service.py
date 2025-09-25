@@ -1,5 +1,5 @@
 # app/services/assessment_service.py
-from app.schemas import SessionData, Pair, TestData, QuestionData, AssessmentReport
+from app.services.schemas import SessionData, Pair, TestData, QuestionData, AssessmentReport
 from app.services.report_service import FinalReportService
 from core_logic.Assessment.test_inference import get_inference
 from core_logic.Accessories.logger import logging
@@ -60,27 +60,46 @@ class AssessmentService:
 
     
     def score_and_conclude_assessment(self, session_data: SessionData, answers: dict) -> SessionData:
+        """
+        Score the assessment and generate the final report
+        """
+        logging.info(f"[AssessmentService] Scoring assessment for category: {session_data.final_category}")
+        logging.info(f"[AssessmentService] Received answers: {answers}")
         
-        test_name = session_data.assessment_data.test_name if session_data.assessment_data else None
+        # Get the test info
+        pair = self._get_testname_and_abbreviation(session_data.final_category)
+        test_name = pair.first
+        abbreviation = pair.second
+        
+        # Format answers for the inference function (it expects question numbers as keys)
+        formatted_answers = {}
+        for key, value in answers.items():
+            # Extract question number from key like "question_1" -> 1
+            if key.startswith("question_"):
+                question_num = int(key.split("_")[1])
+                formatted_answers[question_num] = value
+        
+        logging.info(f"[AssessmentService] Formatted answers for inference: {formatted_answers}")
+        
+        # Get the score and interpretation
+        raw_score, score_interpretation = get_inference(abbreviation, formatted_answers)
+        logging.info(f"[AssessmentService] Calculated raw score: {raw_score}, interpretation: {score_interpretation}")
 
-        raw_score, score_interpretation = get_inference(test_name, answers)
-        logging.info(f"Calculated raw score: {raw_score}, interpretation: {score_interpretation}")
-
+        # Create the assessment report
         session_data.assessment_data = AssessmentReport(
-            test_name=..., 
-            answers=answers, 
+            test_name=test_name if test_name else "Assessment", 
+            answers=formatted_answers, 
             final_score=raw_score, 
             interpretation=score_interpretation,
-            summary="" # Placeholder, will be filled in next step
+            narrative_report=None  # Will be filled by report service
         )
         
-        # Getting complete repsonse from report service
-        llm_summary = self.report_service.generate_final_summary(session_data)
-
-        # --- Create the final report with the real summary ---
-        session_data.assessment_data.summary = llm_summary
+        # Generate the final report using report service
+        final_report = self.report_service.generate_final_report(session_data)
+        session_data.assessment_data.narrative_report = final_report
         session_data.status = "complete"
         
+        logging.info(f"[AssessmentService] Assessment completed successfully")
         return session_data
     
 

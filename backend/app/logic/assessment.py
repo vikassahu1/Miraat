@@ -2,18 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.services.schemas import SessionData, AssessmentRequest, AssessmentSubmitRequest, TestData
 from app.services.assessment_service import AssessmentService
 
-# --- Dependency Injection ---
-def get_assessment_service() -> AssessmentService:
-    raise NotImplementedError
 
-
-# --- API Router ---
-router = APIRouter()
-
-@router.post("/start",response_model = TestData, summary="Get the full test for a given category")
 def start_assessment(
     request: AssessmentRequest,
-    assessment_service: AssessmentService = Depends(get_assessment_service)
+    assessment_service: AssessmentService
 ):
     """
     Given a final category from the conversation, this endpoint returns the
@@ -25,11 +17,10 @@ def start_assessment(
     
     return test_data
 
-  
-@router.post("/submit", response_model=SessionData, summary="Submit all answers and get the final report")
+
 def submit_assessment(
     request: AssessmentSubmitRequest,
-    assessment_service: AssessmentService = Depends(get_assessment_service)
+    assessment_service: AssessmentService
 ):
     """
     Receives the full set of answers, scores them, and returns the

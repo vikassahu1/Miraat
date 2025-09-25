@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Miraat Co-pilot</title>
+    <link href="/static/css/output.css" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
+    <style>
+        .htmx-indicator {
+            display: none;
+        }
+        .htmx-request .htmx-indicator {
+            display: block;
+        }
+        .htmx-request button {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen overflow-hidden">
+    <div class="flex h-full">
+        <!-- The Left Pane - where the chat lives -->
+        <div id="chat-container" class="w-1/3 bg-white border-r flex flex-col"
+             hx-get="/ui/initial_chat_view"
+             hx-trigger="load"
+             hx-swap="innerHTML">
+            <!-- HTMX will load the initial chat box here on page load -->
+        </div>
+        <!-- The Right Pane - where the test/report lives -->
+        <div id="content-workspace" class="w-2/3 bg-gray-50 p-6 overflow-y-auto">
+            <!-- Initially empty, will be populated later -->
+        </div>
+    </div>
+    <script>
+        // Simple JS to auto-scroll the chat box down after new content arrives
+        document.body.addEventListener('htmx:afterSwap', function(evt) {
+            const chatHistory = document.getElementById('chat-history');
+            if (chatHistory) {
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            }
+        });
+    </script>
+</body>
+</html>

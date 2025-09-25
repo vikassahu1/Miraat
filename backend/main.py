@@ -69,9 +69,6 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # <--------------------------------------------------------------------------------------------------------------------------------->
 
 
-# in Miraat/backend/main.py
-from app.api.v1 import conversation as session_v2
-
 
 
 
@@ -569,16 +566,11 @@ def get_test_history(user_name: str, db: Session = Depends(get_db)):
 
 
 # <---  PHASE  2 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------->
-
-from app.api.v1 import conversation as conversation_api
-from app.api.v1 import assessment as assessment_api
+from app.api.v1 import ui as ui_api
 from app.services.conversation_service import ConversationService
 from app.services.triage_service import TriageService
 from app.services.assessment_service import AssessmentService
 from app.services.report_service import FinalReportService
-# ... (import other services as you build them) ...
-
-
 
 
 # Getting the json data
@@ -617,7 +609,7 @@ except FileNotFoundError:
 # These are the single, shared instances of each service used by the API.
 conversation_service_instance = ConversationService(knowledge_base=KNOWLEDGE_BASE)
 triage_service_instance = TriageService(categories=list(KNOWLEDGE_BASE.keys()))
-report_service_instance = FinalReportService(convo_service=conversation_service_instance)
+report_service_instance = FinalReportService()
 assessment_service_instance = AssessmentService(knowledge_base=KNOWLEDGE_BASE, test_data=TEST_DATA, abbr_map=ABBREVIATION_MAP, report_service=report_service_instance) 
 # app = FastAPI(title="Miraat V3 API")
 
@@ -633,14 +625,19 @@ def get_triage_service_instance_override():
 def get_assessment_service_instance_override(): # <-- ADD THIS FUNCTION
     return assessment_service_instance
 
-app.dependency_overrides[conversation_api.get_conversation_service] = get_conversation_service_instance_override
-app.dependency_overrides[conversation_api.get_triage_service] = get_triage_service_instance_override
-app.dependency_overrides[assessment_api.get_assessment_service] = get_assessment_service_instance_override 
+def get_report_service_instance_override():
+    return report_service_instance
+
+app.dependency_overrides[ui_api.get_report_service] = get_report_service_instance_override
+app.dependency_overrides[ui_api.get_convo_service] = get_conversation_service_instance_override
+app.dependency_overrides[ui_api.get_triage_service] = get_triage_service_instance_override
+app.dependency_overrides[ui_api.get_assessment_service] = get_assessment_service_instance_override
 
 
-app.include_router(conversation_api.router, prefix="/api/v1/conversation", tags=["Conversation"])
-app.include_router(assessment_api.router, prefix="/api/v1/assessment", tags=["Assessment"])
 
+app.include_router(ui_api.router, prefix="/ui", tags=["UI - Presentation"])
 
-
-
+@app.get("/hi", response_class=HTMLResponse, tags=["UI - Presentation"])
+async def get_home_page(request: Request):
+    """Serves the main index.html which kicks off the HTMX application."""
+    return templates.TemplateResponse("index.html", {"request": request})

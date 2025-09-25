@@ -1,0 +1,47 @@
+<!-- The chat history part -->
+<div id="chat-history" class="flex-grow p-4 space-y-2 overflow-y-auto flex flex-col">
+    {% if session_data and session_data.conversation_history %}
+        {% for turn in session_data.conversation_history %}
+            <div class="p-3 rounded-lg {{ 'bg-blue-100' if turn.role == 'assistant' else 'bg-gray-200 self-end' }} max-w-md">
+                {{ turn.content | safe }}
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="p-3 rounded-lg bg-blue-100 max-w-md">
+            Hello! Please share what's on your mind.
+        </div>
+    {% endif %}
+</div>
+
+<!-- The form part -->
+<div class="p-4 border-t bg-white">
+    <form hx-post="/ui/conversation_turn" 
+          hx-target="#chat-container" 
+          hx-swap="innerHTML"
+          hx-indicator="#loading">
+        
+        <!-- The session data passport - only include if we have session data -->
+        {% if session_data and session_data.session_id %}
+        <input type="hidden" name="session_data_json" value='{{ session_data | tojson | safe }}'>
+        {% endif %}
+        
+        <div class="flex flex-col space-y-2">
+            <textarea name="user_input" 
+                     class="w-full p-2 border rounded-md" 
+                     required 
+                     placeholder="{% if session_data and session_data.session_id %}Type your response...{% else %}Share what's on your mind...{% endif %}"
+                     rows="3"></textarea>
+            
+            <button type="submit" 
+                    class="w-full p-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 disabled:opacity-50">
+                {% if session_data and session_data.session_id %}Send Response{% else %}Start Conversation{% endif %}
+            </button>
+        </div>
+        
+        <div id="loading" class="htmx-indicator text-center text-sm text-gray-500 mt-2">
+            Processing...
+        </div>
+    </form>
+</div>
+
+

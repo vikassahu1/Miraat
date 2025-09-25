@@ -1,0 +1,16 @@
+<!-- This is the initial state of the chat container -->
+<div id="chat-history" class="flex-grow p-4 space-y-4 overflow-y-auto flex flex-col">
+    {% include "partials/chat_bubble.html" with {'role': 'assistant', 'message': 'Hello! I am your AI Co-pilot. To begin, please share what has been on your mind lately.'} %}
+</div>
+
+<div id="chat-form-container" class="p-4 border-t bg-white">
+    <form hx-post="/api/v1/conversation/start"
+          hx-target="#chat-container"
+          hx-swap="innerHTML"
+          hx-indicator="#loading-spinner">
+        <input type="hidden" name="consent_given" value="true">
+        <textarea name="initial_text" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500" required placeholder="Type your thoughts here..."></textarea>
+        <button type="submit" class="w-full mt-2 p-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700">Start Conversation</button>
+        <div id="loading-spinner" class="htmx-indicator text-center p-2 text-gray-500">Thinking...</div>
+    </form>
+</div>
