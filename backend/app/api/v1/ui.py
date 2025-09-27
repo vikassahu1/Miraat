@@ -43,8 +43,7 @@ templates = Jinja2Templates(directory="templates")
 async def get_initial_chat_view(request: Request):
     """This renders the chat_view when the session_data is None"""
     logging.info("[UI] GET /initial_chat_view called")
-    initial_history = [{"role": "assistant", "content": "Hello! Please share what's on your mind."}]
-    return templates.TemplateResponse("partials/chat_view.html", {
+    return templates.TemplateResponse("partials/chat_interface.html", {
         "request": request,
         "session_data": None  # This triggers the initial form rendering
     })
@@ -94,7 +93,7 @@ async def handle_conversation_turn(
                     logging.info(f"[UI] Successfully got test data: {test_data.test_name}")
                     
                     # Create assessment form HTML
-                    assessment_template = templates.get_template("partials/assessment_form.html")
+                    assessment_template = templates.get_template("partials/assessment_workspace.html")
                     assessment_html = assessment_template.render({
                         "request": request,
                         "session_data": session_data.model_dump(),
@@ -102,7 +101,7 @@ async def handle_conversation_turn(
                     })
                     
                     # Create updated chat view HTML
-                    chat_template = templates.get_template("partials/chat_view.html")
+                    chat_template = templates.get_template("partials/chat_interface.html")
                     chat_html = chat_template.render({
                         "request": request,
                         "session_data": session_data.model_dump()
@@ -132,7 +131,7 @@ async def handle_conversation_turn(
                 updated_state = respond_result.session_data
 
         # Regular conversation continues - re-render chat view
-        return templates.TemplateResponse("partials/chat_view.html", {
+        return templates.TemplateResponse("partials/chat_interface.html", {
             "request": request,
             "session_data": updated_state.model_dump()
         })
@@ -145,7 +144,7 @@ async def handle_conversation_turn(
                 {"role": "assistant", "content": error_message}
             ]
         }
-        return templates.TemplateResponse("partials/chat_view.html", {
+        return templates.TemplateResponse("partials/chat_interface.html", {
             "request": request,
             "session_data": error_state
         })
@@ -192,7 +191,7 @@ async def submit_assessment_ui(
         if completed_session_data.assessment_data and completed_session_data.assessment_data.narrative_report:
             report = completed_session_data.assessment_data.narrative_report
             
-            return templates.TemplateResponse("partials/final_report.html", {
+            return templates.TemplateResponse("partials/results_workspace.html", {
                 "request": request,
                 "report": report.model_dump()
             })
@@ -211,12 +210,19 @@ async def submit_assessment_ui(
 
 
 
-# --- Endpoint 4: Serve the welcome view ---
+# --- Endpoint 4: Main Assessment Interface ---
+@router.get("/hi", response_class=HTMLResponse)
+async def get_assessment_interface(request: Request):
+    """Serves the main assessment interface with split-screen layout"""
+    logging.info("[UI] GET /hi called - serving main assessment interface")
+    return templates.TemplateResponse("assessment_interface.html", {"request": request})
+
+# --- Endpoint 5: Serve the welcome view ---
 @router.get("/welcome_view", response_class=HTMLResponse)
 async def get_welcome_view(request: Request):
     """Serves the initial welcome content"""
     logging.info("[UI] GET /welcome_view called")
-    return templates.TemplateResponse("partials/welcome_content.html", {"request": request})
+    return templates.TemplateResponse("partials/workspace_welcome.html", {"request": request})
 
 # ============================================================================
 # TEST ENDPOINTS - Remove these in production
