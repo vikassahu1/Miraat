@@ -27,7 +27,8 @@ class AssessmentService:
                     test_name = tests[0]  # Return the first test name
         
 
-        abbreviation = self.abbr_map.get(disorder_name)
+        # Use the test name (not disorder name) to get abbreviation
+        abbreviation = self.abbr_map.get(test_name) if test_name else None
 
         return Pair(first = test_name,second = abbreviation)
         

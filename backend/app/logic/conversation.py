@@ -1,4 +1,5 @@
 import uuid
+import uuid
 from fastapi import Depends, HTTPException, Form
 from app.services.schemas import StartRequest, StartResponse, SessionData, ConversationTurn, RespondResponse, RespondRequest
 from app.services.conversation_service import ConversationService
@@ -137,6 +138,7 @@ def respond_conversation(
             # TRANSITION THE STATE
             current_state.status = "refining_sub"
             current_state.belief_state = {subcat: 1.0/len(subcategories) for subcat in subcategories}
+            current_state.final_category = final_broad_category
 
     elif current_state.status == "refining_sub":
         logging.info("[Logic] Refining subcategories.")
@@ -146,9 +148,11 @@ def respond_conversation(
         # Update current_state with new belief state
         current_state.belief_state = updated_state_dict.get('belief_state', current_state.belief_state)
         
-        logging.info(f"[Logic] Updated Belief State: {current_state.belief_state}")
+        logging.info(f"[Logic] Updated Subcategory Belief State: {current_state.belief_state}")
         
         final_subcategory = convo_service.check_funnel_completion(current_state.model_dump())
+        logging.info(f"[Logic] Checking for final subcategory completion. Result: {final_subcategory}")
+        
         if final_subcategory:
             # Subcategory found! 
             # TRANSITION THE STATE
@@ -164,6 +168,7 @@ def respond_conversation(
     # Generate next question if still in conversation
     logging.info(f"[Logic] Current Status: {current_state.status}")
     next_question = convo_service.generate_differentiating_question(current_state.model_dump())
+    logging.info(f"[Logic] Next Question Generated: {next_question}")
     current_state.ai_question_to_ask_user = next_question
     current_state.conversation_history.append(
         ConversationTurn(role="assistant", content=next_question)

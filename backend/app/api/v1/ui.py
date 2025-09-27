@@ -19,10 +19,21 @@ from core_logic.Accessories.exception import CustomException
 import sys
 
 # --- Dependency Injection Setup ---
-def get_convo_service() -> ConversationService: raise NotImplementedError
-def get_triage_service() -> TriageService: raise NotImplementedError
-def get_assessment_service() -> AssessmentService: raise NotImplementedError
-def get_report_service() -> FinalReportService: raise NotImplementedError
+def get_convo_service() -> ConversationService: 
+    # This will be overridden by main.py
+    raise NotImplementedError("Service dependency not properly injected")
+
+def get_triage_service() -> TriageService: 
+    # This will be overridden by main.py
+    raise NotImplementedError("Service dependency not properly injected")
+
+def get_assessment_service() -> AssessmentService: 
+    # This will be overridden by main.py
+    raise NotImplementedError("Service dependency not properly injected")
+
+def get_report_service() -> FinalReportService: 
+    # This will be overridden by main.py
+    raise NotImplementedError("Service dependency not properly injected")
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -72,30 +83,50 @@ async def handle_conversation_turn(
                 # Time to show assessment form
                 session_data = respond_result.session_data
                 
+                # Add debugging
+                logging.info(f"[UI] Assessment ready for category: {session_data.final_category}")
+                logging.info(f"[UI] Session status: {session_data.status}")
+                
                 # Get assessment service dependency
-                assessment_service: AssessmentService = get_assessment_service()
-                test_data = assessment_service.get_assessment_for_category(session_data.final_category)
-                
-                # Create assessment form HTML
-                assessment_template = templates.get_template("partials/assessment_form.html")
-                assessment_html = assessment_template.render({
-                    "request": request,
-                    "session_data": session_data.model_dump(),
-                    "test_data": test_data.model_dump()
-                })
-                
-                # Create updated chat view HTML
-                chat_template = templates.get_template("partials/chat_view.html")
-                chat_html = chat_template.render({
-                    "request": request,
-                    "session_data": session_data.model_dump()
-                })
-                
-                # Return both updates using HTMX OOB
-                return HTMLResponse(
-                    f'<div hx-swap-oob="innerHTML:#content-workspace">{assessment_html}</div>'
-                    f'<div hx-swap-oob="innerHTML:#chat-container">{chat_html}</div>'
-                )
+                try:
+                    assessment_service: AssessmentService = get_assessment_service()
+                    test_data = assessment_service.get_assessment_for_category(session_data.final_category)
+                    logging.info(f"[UI] Successfully got test data: {test_data.test_name}")
+                    
+                    # Create assessment form HTML
+                    assessment_template = templates.get_template("partials/assessment_form.html")
+                    assessment_html = assessment_template.render({
+                        "request": request,
+                        "session_data": session_data.model_dump(),
+                        "test_data": test_data.model_dump()
+                    })
+                    
+                    # Create updated chat view HTML
+                    chat_template = templates.get_template("partials/chat_view.html")
+                    chat_html = chat_template.render({
+                        "request": request,
+                        "session_data": session_data.model_dump()
+                    })
+                    
+                    # Return both updates using HTMX OOB
+                    return HTMLResponse(
+                        f'<div hx-swap-oob="innerHTML:#content-workspace">{assessment_html}</div>'
+                        f'<div hx-swap-oob="innerHTML:#chat-container">{chat_html}</div>'
+                    )
+                    
+                except Exception as e:
+                    logging.error(f"[UI] Error getting assessment: {str(e)}")
+                    # Return an error message instead of crashing
+                    error_html = f'''
+                    <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <h3 class="text-red-800">Assessment Loading Error</h3>
+                        <p class="text-red-700">Sorry, we couldn't load the assessment for "{session_data.final_category}". Please try again.</p>
+                        <p class="text-sm text-red-600 mt-2">Error: {str(e)}</p>
+                    </div>
+                    '''
+                    return HTMLResponse(
+                        f'<div hx-swap-oob="innerHTML:#content-workspace">{error_html}</div>'
+                    )
             else:
                 # Continuing conversation
                 updated_state = respond_result.session_data
@@ -186,3 +217,177 @@ async def get_welcome_view(request: Request):
     """Serves the initial welcome content"""
     logging.info("[UI] GET /welcome_view called")
     return templates.TemplateResponse("partials/welcome_content.html", {"request": request})
+
+# ============================================================================
+# TEST ENDPOINTS - Remove these in production
+# ============================================================================
+
+@router.get("/test_assessment/{category}", response_class=HTMLResponse)
+async def test_assessment_form(
+    request: Request,
+    category: str,
+    assessment_service: AssessmentService = Depends(get_assessment_service)
+):
+    """Test endpoint to directly render assessment form for any category"""
+    logging.info(f"[TEST] Testing assessment form for category: {category}")
+    
+    try:
+        # Get test data
+        test_data = assessment_service.get_assessment_for_category(category)
+        
+        # Create mock session data
+        mock_session_data = {
+            "session_id": "test-session-direct",
+            "status": "assessing", 
+            "final_category": category,
+            "conversation_history": [
+                {"role": "user", "content": "I've been struggling with mental health issues"},
+                {"role": "assistant", "content": "I understand. Let's proceed with an assessment."}
+            ],
+            "belief_state": {category: 1.0},
+            "assessment_data": None
+        }
+        
+        # Create a complete HTML page for testing
+        form_content = templates.get_template("partials/assessment_form.html").render({
+            "request": request,
+            "session_data": mock_session_data,
+            "test_data": test_data.model_dump()
+        })
+        
+        test_html = f'''
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>Test - {test_data.test_name}</title>
+            <link href="/static/css/output.css" rel="stylesheet">
+            <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
+            <style>
+                .htmx-indicator {{
+                    display: none;
+                }}
+                .htmx-request .htmx-indicator {{
+                    display: block;
+                }}
+                .htmx-request button {{
+                    opacity: 0.6;
+                    pointer-events: none;
+                }}
+            </style>
+        </head>
+        <body class="bg-gray-100 min-h-screen">
+            <div class="max-w-4xl mx-auto py-8 px-4">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="mb-6">
+                        <h1 class="text-3xl font-bold text-gray-900">Testing Mode</h1>
+                        <p class="text-gray-600">Category: {category.replace('_', ' ')}</p>
+                        <a href="/ui/test_dashboard" class="text-blue-600 hover:text-blue-800">← Back to Test Dashboard</a>
+                    </div>
+                    <div id="content-area">
+                        {form_content}
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+        '''
+        
+        return HTMLResponse(test_html)
+        
+    except Exception as e:
+        logging.error(f"[TEST] Error in test assessment: {str(e)}")
+        error_html = f'''
+        <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <h3 class="text-red-800">Test Error</h3>
+            <p class="text-red-700">Error testing category "{category}": {str(e)}</p>
+            <details class="mt-2">
+                <summary class="text-sm text-red-600 cursor-pointer">Error Details</summary>
+                <pre class="text-xs text-red-500 mt-1">{str(e)}</pre>
+            </details>
+        </div>
+        '''
+        return HTMLResponse(error_html)
+
+@router.get("/test_dashboard", response_class=HTMLResponse)
+async def get_test_dashboard(request: Request):
+    """Serve the testing dashboard with complete HTML page"""
+    categories = [
+        ("Generalized_Anxiety_Disorder", "Generalized Anxiety Disorder"),
+        ("Social_Anxiety_Disorder", "Social Anxiety Disorder"), 
+        ("Major_Depressive_Disorder", "Major Depressive Disorder"),
+        ("Bipolar_Disorder", "Bipolar Disorder"),
+        ("Post_Traumatic_Stress_Disorder", "PTSD"),
+        ("Obsessive_Compulsive_Disorder", "OCD"),
+        ("Borderline_Personality_Disorder", "Borderline Personality Disorder")
+    ]
+    
+    dashboard_html = '''
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Miraat Assessment Testing Dashboard</title>
+        <link href="/static/css/output.css" rel="stylesheet">
+        <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
+    </head>
+    <body class="bg-gray-100 min-h-screen">
+        <div class="max-w-6xl mx-auto py-8 px-4">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="mb-6">
+                    <h1 class="text-3xl font-bold text-gray-900">🧪 Assessment Testing Dashboard</h1>
+                    <p class="text-gray-600 mt-2">Test individual assessment forms without going through the conversation flow.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    '''
+    
+    for category_key, category_name in categories:
+        dashboard_html += f'''
+                    <div class="border border-gray-200 p-4 rounded-lg hover:border-blue-300 hover:shadow-md transition-all">
+                        <h3 class="font-semibold text-lg text-gray-800 mb-2">{category_name}</h3>
+                        <p class="text-sm text-gray-600 mb-3">Test the assessment form for this category</p>
+                        <div class="flex flex-col space-y-2">
+                            <a href="/ui/test_assessment/{category_key}" 
+                               class="inline-block px-4 py-2 bg-blue-500 text-white rounded text-sm text-center hover:bg-blue-600 transition-colors">
+                               📝 Test Assessment Form
+                            </a>
+                        </div>
+                    </div>
+        '''
+    
+    dashboard_html += '''
+                </div>
+                
+                <div class="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h4 class="font-semibold text-blue-800 text-lg mb-3">🚀 Usage Instructions</h4>
+                    <ul class="text-blue-700 space-y-2">
+                        <li class="flex items-start">
+                            <span class="text-blue-500 mr-2">•</span>
+                            <span>Click "Test Assessment Form" to see the complete rendered form for each mental health category</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-500 mr-2">•</span>
+                            <span>Forms are fully functional - you can fill them out and submit to test the complete flow</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-500 mr-2">•</span>
+                            <span>No conversation setup required - jump straight to testing specific assessments</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-500 mr-2">•</span>
+                            <span><strong>Remember:</strong> Remove these test endpoints before production deployment!</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="mt-6 text-center">
+                    <a href="/" class="text-blue-600 hover:text-blue-800 underline">← Back to Main App</a>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    '''
+    
+    return HTMLResponse(dashboard_html)

@@ -75,8 +75,18 @@ class ConversationService:
     def _get_description(self, category: str) -> str:
         description = self.knowledge_base.get(category)
         if not description:
-            raise Exception(f"Category '{category}' not found in knowledge base.")
+            raise Exception(f"Trying to get discription of Category: '{category}' not found in knowledge base.")
         return description['description']
+
+
+    def _get_subcategory_description(self, subcategory: str, broad_category: str) -> str:
+        category_info = self.knowledge_base.get(broad_category)
+        if not category_info:
+            raise Exception(f"Trying to get subcategory '{subcategory}' of Broad Category '{broad_category}' not found in knowledge base.")
+        subcat_info = category_info.get('Subcategories', {}).get(subcategory)
+        if not subcat_info:
+            raise Exception(f"Trying to get discription of Subcategory: '{subcategory}' not found in knowledge base under Broad Category '{broad_category}'.")
+        return subcat_info['description']
 
 
 
@@ -84,13 +94,9 @@ class ConversationService:
     def _get_subcategories(self, category: str) -> list:
         category_info = self.knowledge_base.get(category)
         if not category_info:
-            raise Exception(f"Category '{category}' not found in knowledge base.")
+            raise Exception(f"Trying to get subcategories of Category '{category}' not found in knowledge base.")
         return list(category_info.get('Subcategories', {}).keys())
     
-
-
-
-
 
 
 
@@ -109,13 +115,21 @@ class ConversationService:
         candidates = list(belief_state.keys())
         last_question = next((turn['content'] for turn in reversed(conversation_history) if turn['role'] == 'assistant'), None)
         last_answer = conversation_history[-1]['content']
+        current_status = session_data.get('status')
 
         if not last_question: return {}
 
         context_definitions = ""
-        for category in candidates:
-            description = self._get_description(category)
-            context_definitions += f"Possibility: '{category}'\nDescription: \"{description}\"\n\n"
+
+        if current_status == "refining_sub":
+            broad_category  = session_data.get('final_category')
+            for subcat in candidates:
+                description = self._get_subcategory_description(subcat,broad_category)
+                context_definitions += f"Possibility: '{subcat}'\nDescription: \"{description}\"\n\n"
+        else:
+            for category in candidates:
+                description = self._get_description(category)
+                context_definitions += f"Possibility: '{category}'\nDescription: \"{description}\"\n\n"
 
         # --- The Prompt now explicitly includes formatting instructions from the parser ---
         prompt = ChatPromptTemplate.from_messages([
@@ -227,9 +241,13 @@ class ConversationService:
         Forces the LLM to first reason about a strategy and then generate a question,
         ensuring the highest possible relevance and accuracy.
         """
+        logging.info(f"1. Session Data for Question Generation: {session_data}")
+        
+
         # --- 1. Extract Context (This part is the same) ---
         belief_state = session_data.get('belief_state') or {}
         conversation_history = session_data.get('conversation_history', [])
+        current_status = session_data.get('status')
         
         # We may proceed to render test for final assessment if just one
         if not belief_state or len(belief_state) < 2:
@@ -238,11 +256,17 @@ class ConversationService:
         # Top 2 candidates
         top_candidates = sorted(belief_state.keys(), key=lambda k: belief_state[k], reverse=True)[:2]
         
-        # Preparing the context definitions (Disorder : Discription) of disorder for the prompt
+        #* FOR BROAD CATEGORY: Preparing the context definitions (Disorder : Discription) of disorder for the prompt 
         context_definitions = ""
-        for category in top_candidates:
-            description = self._get_description(category)
-            context_definitions += f"Theme: '{category}'\nDescription: \"{description}\"\n\n"
+        if current_status == "refining_sub":
+            broad_category  = session_data.get('final_category')
+            for subcat in top_candidates:
+                description = self._get_subcategory_description(subcat,broad_category)
+                context_definitions += f"Theme: '{subcat}'\nDescription: \"{description}\"\n\n"
+        else:
+            for category in top_candidates:
+                description = self._get_description(category)
+                context_definitions += f"Theme: '{category}'\nDescription: \"{description}\"\n\n"
         
         # Preparing the formatted conversation for the prompt
         formatted_history = ""
@@ -484,8 +508,8 @@ if __name__ == "__main__":
 
 
 
-    print(ob.generate_differentiating_question(demo_session))
 
+    print(ob._get_subcategory_description('Generalized_Anxiety_Disorder', 'Anxiety Disorders'))
 
 
 
