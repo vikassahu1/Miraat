@@ -109,14 +109,13 @@ async def handle_conversation_turn(
                     
                     # Return both updates using HTMX OOB
                     return HTMLResponse(
-                        f'<div hx-swap-oob="innerHTML:#content-workspace">{assessment_html}</div>'
                         f'<div hx-swap-oob="innerHTML:#chat-container">{chat_html}</div>'
                     )
                     
                 except Exception as e:
                     logging.error(f"[UI] Error getting assessment data: {str(e)}")
                     error_html = f'<div class="p-4 text-red-600">Assessment Loading Error: {str(e)}</div>'
-                    return HTMLResponse(f'<div hx-swap-oob="innerHTML:#content-workspace">{error_html}</div>')
+                    return HTMLResponse(f'<div hx-swap-oob="innerHTML:#chat-container">{error_html}</div>')
             
             else:
                 # Continue conversation normally
@@ -199,19 +198,19 @@ async def submit_assessment_endpoint(
         })
         
         # Update the workspace with results
-        return HTMLResponse(f'<div hx-swap-oob="innerHTML:#content-workspace">{results_html}</div>')
+        return HTMLResponse(f'<div hx-swap-oob="innerHTML:#chat-container">{results_html}</div>')
         
     except Exception as e:
         logging.error(f"[UI] Error in submit_assessment: {str(e)}")
         error_html = f'<div class="p-4 text-red-600">Assessment Submission Error: {str(e)}</div>'
-        return HTMLResponse(f'<div hx-swap-oob="innerHTML:#content-workspace">{error_html}</div>')
+        return HTMLResponse(f'<div hx-swap-oob="innerHTML:#chat-container">{error_html}</div>')
 
 # --- Endpoint 5: Load main assessment interface ---
 @router.get("/", response_class=HTMLResponse)
 async def get_assessment_interface(request: Request):
     """Main endpoint to load the assessment interface"""
     logging.info("[UI] GET / called")
-    return templates.TemplateResponse("assessment_interface.html", {
+    return templates.TemplateResponse("assess.html", {
         "request": request
     })
 

@@ -1,42 +1,49 @@
-<div class="max-w-3xl mx-auto">
-    <!-- Assessment Header -->
+<!-- Assessment Container: Uses full workspace width for better readability -->
+<div class="w-full max-w-4xl mx-auto">
+    <!-- Assessment Header: Introduction and instructions -->
     <div class="mb-8 text-center">
-        <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ test_data.test_name }}</h1>
-        <p class="text-gray-600">Please respond to each statement based on how you've been feeling recently.</p>
-        <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <p class="text-blue-800 text-sm">Take your time and answer as honestly as possible. Your responses will help provide accurate insights.</p>
+        <h1 class="text-3xl font-bold text-gray-900 mb-3">{{ test_data.test_name }}</h1>
+        <p class="text-lg text-gray-600 mb-4">Please respond to each statement based on how you've been feeling recently.</p>
+        <!-- Instructions box with better visibility -->
+        <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p class="text-blue-800">Take your time and answer as honestly as possible. Your responses will help provide accurate insights.</p>
         </div>
     </div>
 
-    <!-- Assessment Form -->
+    <!-- Assessment Form: HTMX-enabled form for seamless submission -->
     <form hx-post="/ui/submit_assessment"
           hx-target="#content-workspace"
           hx-swap="innerHTML"
           hx-indicator="#assessment-loading"
           class="space-y-6">
         
+        <!-- Hidden session data to maintain state -->
         <input type="hidden" name="session_data_json" value='{{ session_data | tojson | safe }}'>
         
-        <!-- Questions -->
+        <!-- Questions Container: Organized question cards -->
         <div class="space-y-6">
             {% for question in test_data.test_data %}
-            <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-                <div class="mb-4">
-                    <h3 class="text-lg font-medium text-gray-900 mb-2">
+            <!-- Individual Question Card -->
+            <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+                <div class="mb-5">
+                    <!-- Question header with progress indicator -->
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">
                         Question {{ loop.index }} of {{ test_data.test_data|length }}
                     </h3>
-                    <p class="text-gray-700">{{ question.question_text }}</p>
+                    <!-- Question text with better typography -->
+                    <p class="text-gray-800 text-base leading-relaxed">{{ question.question_text }}</p>
                 </div>
                 
+                <!-- Answer Options: Radio buttons with improved styling -->
                 <div class="space-y-3">
                     {% for option in question.options %}
-                    <label class="flex items-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
+                    <label class="flex items-start p-4 rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-blue-300 cursor-pointer transition-all duration-200 group">
                         <input type="radio" 
                                name="question_{{ question.question_id }}" 
                                value="{{ option.option_id }}" 
                                required 
-                               class="form-radio h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
-                        <span class="ml-3 text-gray-700">{{ option.text }}</span>
+                               class="form-radio h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 mt-0.5">
+                        <span class="ml-3 text-gray-700 text-base leading-relaxed group-hover:text-gray-900">{{ option.text }}</span>
                     </label>
                     {% endfor %}
                 </div>
