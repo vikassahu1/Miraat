@@ -6,3 +6,13 @@ miraat_backend.egg-info/SOURCES.txt
 miraat_backend.egg-info/dependency_links.txt
 miraat_backend.egg-info/requires.txt
 miraat_backend.egg-info/top_level.txt
+tests/test_abbreviation_fix.py
+tests/test_assessment_direct.py
+tests/test_clean_ui.py
+tests/test_complete_flow.py
+tests/test_conversation_service.py
+tests/test_endpoints.py
+tests/test_endpoints_quick.py
+tests/test_endpoints_to_add.py
+tests/test_subcategory_flow.py
+tests/test_ui_flow.py

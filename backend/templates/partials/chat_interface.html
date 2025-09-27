@@ -4,7 +4,7 @@
         {% for turn in session_data.conversation_history %}
             <div class="flex {{ 'justify-start' if turn.role == 'assistant' else 'justify-end' }}">
                 <div class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg chat-message
-                    {{ 'bg-blue-600 text-white' if turn.role == 'assistant' else 'bg-gray-200 text-gray-800' }}">
+                    {{ 'bg-blue-600 text-black' if turn.role == 'assistant' else 'bg-gray-200 text-gray-800' }}">
                     <div class="text-sm">{{ turn.content | safe }}</div>
                 </div>
             </div>

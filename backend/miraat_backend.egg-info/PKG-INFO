@@ -18,6 +18,10 @@ Requires-Dist: torch==2.5.1
 Requires-Dist: transformers==4.46.3
 Requires-Dist: langchain==0.3.9
 Requires-Dist: python-multipart==0.0.20
+Requires-Dist: email-validator
+Requires-Dist: langchain_google_genai
+Requires-Dist: spacy
+Requires-Dist: pytest
 Provides-Extra: dev
 Requires-Dist: pytest; extra == "dev"
 Requires-Dist: httpx; extra == "dev"
