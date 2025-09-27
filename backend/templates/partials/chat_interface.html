@@ -1,65 +1,144 @@
-<!-- Chat History Section: Scrollable area for conversation messages -->
-<div id="chat-history" class="flex-1 p-6 space-y-4 overflow-y-auto min-h-0 custom-scrollbar">
+<!-- Chat History Section: Professional message area with avatars -->
+<div class="chat-wrapper">
+    <div id="chat-history" class="chat-history custom-scrollbar">
     {% if session_data and session_data.conversation_history %}
         <!-- Loop through existing conversation history -->
         {% for turn in session_data.conversation_history %}
-            <div class="flex {{ 'justify-start' if turn.role == 'assistant' else 'justify-end' }}">
-                <!-- Chat bubble with proper word wrapping and responsive width -->
-                <div class="max-w-[90%] px-4 py-3 rounded-2xl chat-message break-words shadow-sm
-                    {{ 'bg-blue-200 text-black' if turn.role == 'assistant' else 'bg-blue-500 text-gray-800' }}">
-                    <div class="text-sm whitespace-pre-wrap">{{ turn.content | safe }}</div>
+            <div class="message-container">
+                {% if turn.role == 'assistant' %}
+                <div class="message-row assistant">
+                    <div class="message-avatar assistant">🤖</div>
+                    <div class="message-bubble assistant chat-message">
+                        <div class="message-content">{{ turn.content | safe }}</div>
+                    </div>
                 </div>
+                {% else %}
+                <div class="message-row user" style="justify-content: flex-end; flex-direction: row-reverse; text-align: right;">
+                    <div class="message-avatar user">👤</div>
+                    <div class="message-bubble user chat-message">
+                        <div class="message-content">{{ turn.content | safe }}</div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         {% endfor %}
     {% else %}
-        <!-- Initial welcome message when no conversation exists -->
-        <div class="flex justify-start">
-            <div class="max-w-[90%] px-4 py-3 rounded-2xl bg-blue-200 text-black break-words shadow-sm">
-                <div class="text-sm whitespace-pre-wrap">Hello! I'm here to help with your mental health assessment. Please share what's on your mind today.</div>
+        <!-- Professional welcome section with comprehensive info -->
+        <div id="chat-e-container" class="welcome-section">
+            <!-- Main header -->
+            <div class="welcome-header">
+                <h2> ✨ Miraat - Advanced Mental Health Assessment</h2>
+                <p class="welcome-subtitle">Powered by AI & Evidence-Based Psychology</p>
             </div>
-        </div>
-    {% endif %}
-</div>
 
-<!-- Chat Input Form Section: Fixed at bottom of chat panel -->
-<div class="flex-shrink-0 border-t border-gray-200 p-4 bg-gray-50">
-    <!-- HTMX form for sending messages -->
-    <form hx-post="/ui/conversation_turn" 
-          hx-target="#chat-container" 
-          hx-swap="innerHTML"
-          hx-indicator="#chat-loading">
-        
-        <!-- Hidden field to maintain session state -->
-        {% if session_data and session_data.session_id %}
-        <input type="hidden" name="session_data_json" value='{{ session_data | tojson | safe }}'>
-        {% endif %}
-        
-        <div class="space-y-3">
-            <!-- Message input textarea with auto-resize prevention -->
-            <textarea name="user_input" 
-                     class="w-full p-4 border border-gray-200 rounded-xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white shadow-sm" 
-                     required 
-                     placeholder="{% if session_data and session_data.session_id %}Type your response here...{% else %}Tell me what's on your mind...{% endif %}"
-                     rows="3"
-                     maxlength="1000"></textarea>
             
-            <!-- Submit button with contextual text -->
-            <button type="submit" 
-                    class="w-full py-3 px-4 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                {% if session_data and session_data.session_id %}Send Message{% else %}Start Assessment{% endif %}
-            </button>
+            <!-- Technology features -->
+            <div class="technology-features">
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <div class="feature-icon">🤖</div>
+                        <div class="feature-text">
+                            <strong>Multi-Level AI Analysis</strong>
+                            <span>Advanced ML classification with state-of-the-art generative AI</span>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🌍</div>
+                        <div class="feature-text">
+                            <strong>Standardized Assessment</strong>
+                            <span>World-recognized mental health testing methodologies</span>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📊</div>
+                        <div class="feature-text">
+                            <strong>Mathematical Precision</strong>
+                            <span>Thorough analysis of every message for accurate insights</span>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🔒</div>
+                        <div class="feature-text">
+                            <strong>Privacy Protected</strong>
+                            <span>Zero PII storage with complete confidentiality</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
-            <!-- Loading indicator shown during HTMX requests -->
-            <div id="chat-loading" class="htmx-indicator">
-                <div class="text-center text-sm text-gray-500 flex items-center justify-center">
-                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Processing your message...
+            <!-- Call to action -->
+            <div class="assessment-prompt">
+                <h3>🌟 Begin Your Mental Health Journey</h3>
+                <p>Share everything that's troubling you - your thoughts, feelings, symptoms, or concerns. Our advanced AI will analyze your input comprehensively to provide personalized preliminary insights and solutions.</p>
+                <div class="prompt-highlight">
+                     ⚕️ <strong>Professional Disclaimer:</strong> - This assessment provides preliminary insights and is not a substitute for professional psychiatric or psychological consultation.
                 </div>
             </div>
 
         </div>
-    </form>
+    {% endif %}
+    </div>
+
+    <!-- Chat Input Form Section: Professional input area with round send button -->
+    <div class="chat-input-section">
+        <!-- HTMX form for sending messages -->
+        <form class="input-form" hx-post="/ui/conversation_turn" 
+              hx-target="#chat-container" 
+              hx-swap="innerHTML"
+              hx-indicator="#chat-loading">
+            
+            <!-- Hidden field to maintain session state -->
+            {% if session_data and session_data.session_id %}
+            <input type="hidden" name="session_data_json" value='{{ session_data | tojson | safe }}'>
+            {% endif %}
+            
+            <div class="form-container">
+                <!-- Message input textarea with auto-resize prevention -->
+                <textarea name="user_input" 
+                         class="message-textarea" 
+                         required 
+                         placeholder="{% if session_data and session_data.session_id %}Type your message here...{% else %}Share what's on your mind...{% endif %}"
+                         rows="1"
+                         maxlength="1000"></textarea>
+                
+                <!-- Professional round send button with arrow icon -->
+                <button id="chat-send-button"  type="submit" class="submit-button" title="Send message">
+                    <svg class="send-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                                    <script>
+                                    // Submit form on Enter (unless Shift is held)
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        document.querySelector('.message-textarea').addEventListener('keydown', function(e) {
+                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                e.preventDefault();
+                                                const form = e.target.closest('form');
+                                                if (form && e.target.value.trim()) {
+                                                    form.submit();
+                                                }
+                                            }
+                                        });
+                                    });
+
+
+                                    </script>
+            </div>
+            
+            <!-- Professional loading indicator with typing animation -->
+            <div id="chat-loading" class="loading-indicator htmx-indicator">
+                <div class="loading-content">
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                    <span>AI is thinking...</span>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
+
+

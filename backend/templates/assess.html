@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Miraat - Mental Health Assessment</title>
-    <link href="/static/css/output.css" rel="stylesheet">
+    <link href="/static/css/custom-styles.css" rel="stylesheet">
     <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
     <style>
         /* HTMX Loading States */
@@ -62,16 +62,21 @@
         }
     </style>
 </head>
-<body class="flex items-center justify-center overflow-hidden">
+<body class="main-container">
 
-    <div id="content-container" class="flex flex-col items-center justify-center h-[100vh] w-[50vw] bg-slate-900 pt-10">
-            <!-- Chat Header: Branding and description -->
-            <div id="chat-heading" class="flex flex-col items-center justify-center text-black flex-shrink-0 w-full" style="height:12vh;">
-                <h2 class="text-2xl font-bold text-center">AI Mental Health Assistant</h2>
-                <p class="text-blue-100 text-sm mt-1 text-center">Your private conversation space</p>
+    <div id="content-container" class="content-wrapper">
+            <!-- Chat Header: Professional top bar with status indicator -->
+            <div id="chat-heading" class="chat-header">
+                <div class="chat-header-left">
+                    <div class="chat-status-indicator"></div>
+                    <div>
+                        <h2>Miraat AI Assistant</h2>
+                        <p>Secure & Confidential Mental Health Support</p>
+                    </div>
+                </div>
             </div>
             
-            <div id="chat-container" class="flex-1 flex flex-col w-full"
+            <div id="chat-container" class="chat-container"
                  hx-get="/ui/initial_chat_view"
                  hx-trigger="load"
                  hx-swap="innerHTML">
@@ -99,6 +104,28 @@
                 evt.target.classList.add('fade-in');
             }
         });
+
+        // Professional textarea auto-resize functionality
+        document.addEventListener('input', function(e) {
+            if (e.target.matches('.message-textarea')) {
+                e.target.style.height = 'auto';
+                e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+            }
+        });
+
+        // Enter key to send (Shift+Enter for new line)
+        document.addEventListener('keydown', function(e) {
+            if (e.target.matches('.message-textarea')) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    const form = e.target.closest('form');
+                    if (form && e.target.value.trim()) {
+                        form.querySelector('.submit-button').click();
+                    }
+                }
+            }
+        });
+
     </script>
 </body>
 </html>
