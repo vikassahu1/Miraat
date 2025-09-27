@@ -11,7 +11,7 @@
         {% endfor %}
     {% else %}
         <div class="flex justify-start">
-            <div class="max-w-xs lg:max-w-md px-4 py-3 rounded-lg bg-blue-600 text-white">
+            <div class="max-w-xs lg:max-w-md px-4 py-3 rounded-lg bg-blue-600 text-black">
                 <div class="text-sm">Hello! I'm here to help with your mental health assessment. Please share what's on your mind today.</div>
             </div>
         </div>
@@ -38,11 +38,11 @@
                      rows="3"
                      maxlength="1000"></textarea>
             
-            <button type="submit" 
-                    class="w-full py-3 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                {% if session_data and session_data.session_id %}Send Message{% else %}Start Assessment{% endif %}
-            </button>
-            
+                <button type="submit" 
+                    class="w-full py-3 px-4 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    {% if session_data and session_data.session_id %}Send Message{% else %}Start Assessment{% endif %}
+                </button>
+                            
             <div id="chat-loading" class="htmx-indicator">
                 <div class="text-center text-sm text-gray-500 flex items-center justify-center">
                     <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

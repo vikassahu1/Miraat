@@ -224,6 +224,18 @@ async def get_welcome_view(request: Request):
     logging.info("[UI] GET /welcome_view called")
     return templates.TemplateResponse("partials/workspace_welcome.html", {"request": request})
 
+
+
+
+
+
+
+
+
+
+
+
+
 # ============================================================================
 # TEST ENDPOINTS - Remove these in production
 # ============================================================================

@@ -1,7 +1,0 @@
-{% extends "assessment2.html" %}
-
-{# This is a dummy block that HTMX will replace #}
-{% block body %}
-    <div hx-get="/ui/initial_chat" hx-trigger="load" hx-target="#chat-container" class="bg"></div>
-    <div hx-get="/ui/welcome_view" hx-trigger="load" hx-target="#content-workspace"></div>
-{% endblock %}
