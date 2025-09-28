@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Literal, List, Dict, Any, Optional
+from typing import Literal, List, Dict, Any, Optional, Union
 
 
 class ConversationTurn(BaseModel):
@@ -121,7 +121,7 @@ class SubmitRequest(BaseModel):
     answers: Dict[str, int] # e.g. {"gad7_q1": 2, "gad7_q2": 3, ...}
 
 class QuestionData(BaseModel):
-    question_id: int
+    question_id: Union[int, str]  # Allow both int and string IDs
     question_text: str
     options: List[Dict[str, Any]] # e.g., [{"option": "Not at all", "value": 0}, ...]
 

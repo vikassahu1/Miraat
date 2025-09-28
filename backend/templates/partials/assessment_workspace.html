@@ -1,49 +1,49 @@
-<!-- Assessment Container: Uses full workspace width for better readability -->
-<div class="w-full max-w-4xl mx-auto">
+<!-- Assessment Container: Professional assessment form with custom styling -->
+<div class="assessment-container">
     <!-- Assessment Header: Introduction and instructions -->
-    <div class="mb-8 text-center">
-        <h1 class="text-3xl font-bold text-gray-900 mb-3">{{ test_data.test_name }}</h1>
-        <p class="text-lg text-gray-600 mb-4">Please respond to each statement based on how you've been feeling recently.</p>
+    <div class="assessment-header">
+        <h1 class="assessment-title">{{ test_data.test_name }}</h1>
+        <p class="assessment-subtitle">Please respond to each statement based on how you've been feeling recently.</p>
         <!-- Instructions box with better visibility -->
-        <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p class="text-blue-800">Take your time and answer as honestly as possible. Your responses will help provide accurate insights.</p>
+        <div class="assessment-instructions">
+            <p>Take your time and answer as honestly as possible. Your responses will help provide accurate insights.</p>
         </div>
     </div>
 
     <!-- Assessment Form: HTMX-enabled form for seamless submission -->
     <form hx-post="/ui/submit_assessment"
-          hx-target="#content-workspace"
+          hx-target="#chat-container"
           hx-swap="innerHTML"
           hx-indicator="#assessment-loading"
-          class="space-y-6">
+          class="assessment-form">
         
         <!-- Hidden session data to maintain state -->
         <input type="hidden" name="session_data_json" value='{{ session_data | tojson | safe }}'>
         
         <!-- Questions Container: Organized question cards -->
-        <div class="space-y-6">
+        <div class="questions-container">
             {% for question in test_data.test_data %}
             <!-- Individual Question Card -->
-            <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-                <div class="mb-5">
+            <div class="question-card">
+                <div class="question-header">
                     <!-- Question header with progress indicator -->
-                    <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                    <h3 class="question-number">
                         Question {{ loop.index }} of {{ test_data.test_data|length }}
                     </h3>
                     <!-- Question text with better typography -->
-                    <p class="text-gray-800 text-base leading-relaxed">{{ question.question_text }}</p>
+                    <p class="question-text">{{ question.question_text }}</p>
                 </div>
                 
                 <!-- Answer Options: Radio buttons with improved styling -->
-                <div class="space-y-3">
+                <div class="options-container">
                     {% for option in question.options %}
-                    <label class="flex items-start p-4 rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-blue-300 cursor-pointer transition-all duration-200 group">
+                    <label class="option-label">
                         <input type="radio" 
-                               name="question_{{ question.question_id }}" 
+                               name="answer_{{ question.question_id }}" 
                                value="{{ option.option_id }}" 
                                required 
-                               class="form-radio h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 mt-0.5">
-                        <span class="ml-3 text-gray-700 text-base leading-relaxed group-hover:text-gray-900">{{ option.text }}</span>
+                               class="option-radio">
+                        <span class="option-text">{{ option.text }}</span>
                     </label>
                     {% endfor %}
                 </div>
@@ -52,31 +52,31 @@
         </div>
         
         <!-- Progress indicator -->
-        <div class="bg-white rounded-lg border border-gray-200 p-4">
-            <div class="flex items-center justify-between text-sm text-gray-600 mb-2">
+        <div class="progress-container">
+            <div class="progress-info">
                 <span>Progress</span>
                 <span>{{ test_data.test_data|length }} questions</span>
             </div>
-            <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%" id="progress-bar"></div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar"></div>
             </div>
-            <p class="text-xs text-gray-500 mt-2">Complete all questions to submit your assessment</p>
+            <p class="progress-text">Complete all questions to submit your assessment</p>
         </div>
 
         <!-- Submit Button -->
-        <div class="bg-white rounded-lg border border-gray-200 p-6 text-center">
-            <button type="submit" 
-                    class="w-full py-4 px-6 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+        <div class="submit-container">
+            <button type="submit" class="assessment-submit-button">
                 Submit Assessment
             </button>
             
-            <div id="assessment-loading" class="htmx-indicator mt-4">
-                <div class="flex items-center justify-center text-gray-600">
-                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Processing your assessment...
+            <div id="assessment-loading" class="assessment-loading htmx-indicator">
+                <div class="loading-content">
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                    <span>Processing your assessment...</span>
                 </div>
             </div>
         </div>

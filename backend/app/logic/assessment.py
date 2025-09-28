@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
-from app.services.schemas import SessionData, AssessmentRequest, AssessmentSubmitRequest, TestData
+from app.services.schemas import SessionData, AssessmentRequest, AssessmentSubmitRequest,TestData
 from app.services.assessment_service import AssessmentService
 
 
 def start_assessment(
     request: AssessmentRequest,
     assessment_service: AssessmentService
-):
+)->TestData:
     """
     Given a final category from the conversation, this endpoint returns the
     full test (questions and options) to be rendered by the UI.
@@ -21,7 +21,7 @@ def start_assessment(
 def submit_assessment(
     request: AssessmentSubmitRequest,
     assessment_service: AssessmentService
-):
+) -> SessionData:
     """
     Receives the full set of answers, scores them, and returns the
     final, completed SessionData object containing the full report.

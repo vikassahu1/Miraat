@@ -81,6 +81,7 @@ async def handle_conversation_turn(
             # Handle RespondResponse object
             if respond_result.status == "assessment_ready":
                 # Time to show assessment form
+                logging.info("[UI] Conversation indicates assessment is ready")
                 session_data = respond_result.session_data
                 
                 # Add debugging
@@ -91,31 +92,20 @@ async def handle_conversation_turn(
                 try:
                     test_data = assessment_service.get_assessment_for_category(session_data.final_category)
                     logging.info(f"[UI] Successfully got test data: {test_data.test_name}")
+                    logging.info(f"[UI] Complete test data: {test_data}")
                     
-                    # Create assessment form HTML
-                    assessment_template = templates.get_template("partials/assessment_workspace.html")
-                    assessment_html = assessment_template.render({
+                    # Create assessment form HTML - return directly for HTMX target replacement
+                    return templates.TemplateResponse("partials/assessment_workspace.html", {
                         "request": request,
                         "session_data": session_data.model_dump(),
                         "test_data": test_data.model_dump()
                     })
                     
-                    # Create updated chat view HTML
-                    chat_template = templates.get_template("partials/chat_interface.html")
-                    chat_html = chat_template.render({
-                        "request": request,
-                        "session_data": session_data.model_dump()
-                    })
-                    
-                    # Return both updates using HTMX OOB
-                    return HTMLResponse(
-                        f'<div hx-swap-oob="innerHTML:#chat-container">{chat_html}</div>'
-                    )
                     
                 except Exception as e:
                     logging.error(f"[UI] Error getting assessment data: {str(e)}")
                     error_html = f'<div class="p-4 text-red-600">Assessment Loading Error: {str(e)}</div>'
-                    return HTMLResponse(f'<div hx-swap-oob="innerHTML:#chat-container">{error_html}</div>')
+                    return HTMLResponse(error_html)
             
             else:
                 # Continue conversation normally
@@ -177,33 +167,29 @@ async def submit_assessment_endpoint(
         # Create assessment request
         assessment_request = AssessmentSubmitRequest(
             session_data=session_data,
-            assessment_answers=assessment_answers
+            answers=assessment_answers
         )
         
         # Process assessment
         assessment_result = submit_assessment_logic(
             assessment_request, 
             assessment_service, 
-            report_service
         )
         
         logging.info(f"[UI] Assessment processing completed with status: {assessment_result.status}")
+        logging.info(f"[UI] Generating final report: {assessment_result.assessment_data.narrative_report}")
         
-        # Create results view HTML
-        results_template = templates.get_template("partials/results_workspace.html")
-        results_html = results_template.render({
+        # Return results view directly for HTMX target replacement
+        return templates.TemplateResponse("partials/results_workspace.html", {
             "request": request,
-            "session_data": assessment_result.session_data.model_dump(),
-            "final_report": assessment_result.final_report.model_dump() if assessment_result.final_report else None
+            "session_data": assessment_result.model_dump(),
+            "final_report": assessment_result.assessment_data.narrative_report.model_dump() if assessment_result.assessment_data and assessment_result.assessment_data.narrative_report else None
         })
-        
-        # Update the workspace with results
-        return HTMLResponse(f'<div hx-swap-oob="innerHTML:#chat-container">{results_html}</div>')
         
     except Exception as e:
         logging.error(f"[UI] Error in submit_assessment: {str(e)}")
         error_html = f'<div class="p-4 text-red-600">Assessment Submission Error: {str(e)}</div>'
-        return HTMLResponse(f'<div hx-swap-oob="innerHTML:#chat-container">{error_html}</div>')
+        return HTMLResponse(error_html)
 
 
 # --- Endpoint 5: Load main assessment interface ---
