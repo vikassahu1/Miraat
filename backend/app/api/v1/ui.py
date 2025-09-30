@@ -43,7 +43,7 @@ templates = Jinja2Templates(directory="templates")
 async def get_initial_chat_view(request: Request):
     """This renders the chat_view when the session_data is None"""
     logging.info("[UI] GET /initial_chat_view called")
-    return templates.TemplateResponse("partials/chat_interface.html", {
+    return templates.TemplateResponse("partials/init_chat_interface.html", {
         "request": request,
         "session_data": None  # This triggers the initial form rendering
     })
