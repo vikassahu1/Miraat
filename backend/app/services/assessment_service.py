@@ -71,25 +71,18 @@ class AssessmentService:
         pair = self._get_testname_and_abbreviation(session_data.final_category)
         test_name = pair.first
         abbreviation = pair.second
+        logging.info(f"[AssessmentService] Mapped to test: {test_name} (abbreviation: {abbreviation})")
         
-        # Format answers for the inference function (it expects question numbers as keys)
-        formatted_answers = {}
-        for key, value in answers.items():
-            # Extract question number from key like "question_1" -> 1
-            if key.startswith("question_"):
-                question_num = int(key.split("_")[1])
-                formatted_answers[question_num] = value
-        
-        logging.info(f"[AssessmentService] Formatted answers for inference: {formatted_answers}")
+        logging.info(f"[AssessmentService] Formatted answers for inference: {answers}")
         
         # Get the score and interpretation
-        raw_score, score_interpretation = get_inference(abbreviation, formatted_answers)
+        raw_score, score_interpretation = get_inference(test_name, answers)
         logging.info(f"[AssessmentService] Calculated raw score: {raw_score}, interpretation: {score_interpretation}")
 
         # Create the assessment report
         session_data.assessment_data = AssessmentReport(
             test_name=test_name if test_name else "Assessment", 
-            answers=formatted_answers, 
+            answers=answers, 
             final_score=raw_score, 
             interpretation=score_interpretation,
             narrative_report=None  # Will be filled by report service

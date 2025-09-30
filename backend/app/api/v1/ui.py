@@ -162,6 +162,7 @@ async def submit_assessment_endpoint(
                 question_id = key.replace('answer_', '')
                 assessment_answers[question_id] = value
         
+        # !IMPORTANT: format if assessment answers need is Dict[string[question_id]:int[answer_index]]
         logging.info(f"[UI] Collected {len(assessment_answers)} assessment answers")
         
         # Create assessment request

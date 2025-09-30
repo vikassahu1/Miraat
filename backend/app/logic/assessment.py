@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.services.schemas import SessionData, AssessmentRequest, AssessmentSubmitRequest,TestData
 from app.services.assessment_service import AssessmentService
+from core_logic.Accessories.logger import logging
 
 
 def start_assessment(
@@ -28,6 +29,8 @@ def submit_assessment(
     """
     session_data = request.session_data
     answers = request.answers
+
+    logging.info(f"Inside test submit function: {session_data}, {answers}")
     
     if session_data.status != "assessing":
         raise HTTPException(status_code=400, detail="Session is not in the assessing state.")

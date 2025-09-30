@@ -626,6 +626,18 @@ def get_inference(test: str, ans: Dict[str, int]) -> Tuple[int, str]:
 # For testing purpose 
 if __name__ == "__main__":
     logging.info("Logger working - Starting comprehensive test of all assessment functions")
+
+    test_data =  {'1': 2, '2': 4, '3': 2, '4': 2, '5': 2, '6': 3, '7': 2, '8': 2, '9': 2, '10': 2, '11': 3, '12': 4, '13': 3, '14': 3, '15': 2, '16': 2, '17': 2, '18': 2, '19': 1, '20': 1, '21': 2, '22': 3, '23': 3, '24': 3}
+    test_name = "Liebowitz Social Anxiety Scale (LSAS)"
+    try:
+        score, interpretation = get_inference(test_name, test_data)
+        print(f"Test: {test_name}, Score: {score}, Interpretation: {interpretation}")
+    except Exception as e:
+        logging.error(f"Error during testing: {str(e)}")
+
+
+
+    exit()
     
     # Create test data for each assessment
     test_data = {
@@ -666,33 +678,15 @@ if __name__ == "__main__":
             6: 2,  # More than half the days
             7: 1   # Several days
         },
-        "Liebowitz Social Anxiety Scale (LSAS)": {
-            # Sample of LSAS questions (24 questions in total)
-            1: 3,  # Severe anxiety
-            2: 2,  # Moderate anxiety
-            3: 2,  # Moderate anxiety
-            4: 3,  # Severe anxiety
-            5: 2,  # Moderate anxiety
-            6: 2,  # Moderate anxiety
-            7: 1,  # Mild anxiety
-            8: 2,  # Moderate anxiety
-            9: 3,  # Severe anxiety
-            10: 2,  # Moderate anxiety
-            11: 2,  # Moderate anxiety
-            12: 1,  # Mild anxiety
-            13: 3,  # Severe anxiety
-            14: 2,  # Moderate anxiety
-            15: 1,  # Mild anxiety
-            16: 2,  # Moderate anxiety
-            17: 2,  # Moderate anxiety
-            18: 3,  # Severe anxiety
-            19: 1,  # Mild anxiety
-            20: 2,  # Moderate anxiety
-            21: 2,  # Moderate anxiety
-            22: 3,  # Severe anxiety
-            23: 2,  # Moderate anxiety
-            24: 2   # Moderate anxiety
-        },
+
+
+
+        "Liebowitz Social Anxiety Scale (LSAS)": {'1': 2, '2': 4, '3': 2, '4': 2, '5': 2, '6': 3, '7': 2, '8': 2, '9': 2, '10': 2, '11': 3, '12': 4, '13': 3, '14': 3, '15': 2, '16': 2, '17': 2, '18': 2, '19': 1, '20': 1, '21': 2, '22': 3, '23': 3, '24': 3},
+
+
+
+
+
         "PTSD Checklist for DSM-5 (PCL-5)": {
             # 20 PCL-5 questions
             1: 4,  # Extremely
