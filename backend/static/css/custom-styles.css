@@ -595,6 +595,84 @@ html, body {
     }
 }
 
+
+/* === FINAL, UNIFIED CONSENT MODAL STYLES === */
+
+/* The Overlay: controlled by the ID. It is HIDDEN by default. */
+#consent-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex; /* Always flex for centering */
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+
+  /* --- VISIBILITY CONTROL --- */
+  opacity: 0; /* Hidden by default */
+  pointer-events: none; /* Not interactive when hidden */
+  transition: opacity 0.3s ease-out;
+}
+
+/* When JS adds .show, it becomes VISIBLE and INTERACTIVE */
+#consent-modal.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* The Inner Content Box */
+.consent-modal {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  
+  /* Animate its entry */
+  transform: scale(0.95);
+  transition: transform 0.3s ease-out;
+}
+
+/* When the overlay is shown, animate the inner modal into view */
+#consent-modal.show .consent-modal {
+    transform: scale(1);
+}
+
+
+/* --- ALL YOUR OTHER STYLES ARE PERFECT - KEEP THEM AS IS --- */
+.consent-header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 24px 32px; border-radius: 20px 20px 0 0; display: flex; align-items: center; gap: 16px; }
+.consent-icon { width: 48px; height: 48px; background: rgba(255, 255, 255, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.consent-icon svg { width: 24px; height: 24px; fill: white; }
+.consent-header h2 { font-size: 1.75rem; font-weight: 700; margin: 0; }
+.consent-content { padding: 32px; }
+.consent-text h3 { font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 16px; }
+.consent-text p { color: #374151; font-size: 1rem; line-height: 1.6; margin-bottom: 20px; }
+.consent-list { list-style: none; padding: 0; margin: 0 0 24px 0; }
+.consent-list li { display: flex; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid #f1f5f9; color: #374151; font-size: 0.925rem; line-height: 1.6; }
+.consent-list li:last-child { border-bottom: none; }
+.consent-list li strong { color: #1e293b; font-weight: 600; min-width: 140px; margin-right: 12px; }
+.consent-disclaimer { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 12px; padding: 20px; margin-top: 24px; }
+.consent-disclaimer p { color: #92400e; font-size: 0.925rem; margin: 0; font-weight: 500; }
+.consent-actions { padding: 24px 32px 32px; display: flex; gap: 16px; justify-content: flex-end; }
+.consent-btn { display: flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 12px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s ease; border: none; min-width: 140px; justify-content: center; }
+.consent-btn svg { width: 20px; height: 20px; fill: currentColor; }
+.consent-decline { background: #f8fafc; color: #64748b; border: 2px solid #e2e8f0; }
+.consent-decline:hover { background: #f1f5f9; border-color: #cbd5e1; color: #475569; transform: translateY(-1px); }
+.consent-accept { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
+.consent-accept:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4); }
+
+/* Responsive Styles */
+@media (max-width: 768px) { .consent-modal { width: 95%; margin: 20px; } .consent-header { padding: 20px 24px; flex-direction: column; text-align: center; gap: 12px; } .consent-header h2 { font-size: 1.5rem; } .consent-content { padding: 24px; } .consent-list li { flex-direction: column; align-items: flex-start; gap: 4px; } .consent-list li strong { min-width: auto; margin-right: 0; } .consent-actions { padding: 16px 24px 24px; flex-direction: column; } .consent-btn { width: 100%; } }
+
+
+
+
 /* === CUSTOM SCROLLBAR === */
 .custom-scrollbar {
     scrollbar-width: thin;

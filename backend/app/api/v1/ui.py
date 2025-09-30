@@ -67,6 +67,7 @@ async def handle_conversation_turn(
         if session_data_json is None:
             # --- THIS IS THE FIRST TURN ---
             logging.info("[UI] First turn - starting new conversation")
+            # Consent is handled on frontend via localStorage, so we assume true here
             start_request = StartRequest(initial_text=user_input, consent_given=True)
             start_response = start_conversation_logic(start_request, convo_service)
             updated_state = start_response.session_data

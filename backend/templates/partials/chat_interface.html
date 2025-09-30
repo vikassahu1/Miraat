@@ -1,3 +1,138 @@
+<div id="consent-modal" class="consent-modal-overlay">
+    <div class="consent-modal">
+        <div class="consent-header">
+            <div class="consent-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1M10 17L6 13L7.41 11.59L10 14.17L16.59 7.59L18 9L10 17Z"/>
+                </svg>
+            </div>
+            <h2>Privacy & Consent</h2>
+        </div>
+        <div class="consent-content">
+            <div class="consent-text">
+                <h3>Mental Health Assessment Terms</h3>
+                <p>Before we begin your mental health assessment, please review and consent to the following:</p>
+                <ul class="consent-list">
+                    <li><strong>Confidentiality:</strong> Your responses are processed securely and not stored with personal identifiers</li>
+                    <li><strong>Assessment Purpose:</strong> This is a preliminary screening tool, not a clinical diagnosis</li>
+                    <li><strong>Professional Consultation:</strong> Results should be discussed with qualified healthcare providers</li>
+                    <li><strong>Data Usage:</strong> Anonymous data may be used to improve our assessment algorithms</li>
+                </ul>
+                <div class="consent-disclaimer">
+                    <p><strong>Important:</strong> This assessment is not a substitute for professional medical advice, diagnosis, or treatment. If you're experiencing a mental health crisis, please contact emergency services immediately.</p>
+                </div>
+            </div>
+        </div>
+        <div class="consent-actions">
+            <button id="consent-decline" class="consent-btn consent-decline">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+                </svg>
+                Decline
+            </button>
+            <button id="consent-accept" class="consent-btn consent-accept">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+                </svg>
+                I Agree & Continue
+            </button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    // This script is self-contained and designed to run whenever it is loaded into the DOM.
+
+    // Use an Immediately Invoked Function Expression (IIFE) to avoid polluting the global scope.
+    (function() {
+        // Use a unique ID for this script execution to prevent re-running on the same element.
+        const scriptId = 'consent-script-' + Date.now();
+        
+        // Find the modal that was just loaded with this script.
+        const modal = document.getElementById('consent-modal');
+
+        // If the modal doesn't exist or has already been initialized, do nothing.
+        if (!modal || modal.dataset.initialized === 'true') {
+            return;
+        }
+        
+        console.log('Consent script is running and found the modal.');
+        // Mark the modal as initialized to prevent event listeners from being attached multiple times.
+        modal.dataset.initialized = 'true';
+
+        const acceptBtn = document.getElementById('consent-accept');
+        const declineBtn = document.getElementById('consent-decline');
+        const chatWrapper = document.querySelector('.chat-wrapper');
+
+        function showModal() {
+            console.log('Showing modal...');
+            modal.style.display = 'flex'; // Use direct style manipulation for reliability
+            // Use a short delay before adding the class to allow the display change to register,
+            // which ensures the CSS transition will fire.
+            setTimeout(() => {
+                modal.classList.add('show');
+                if (chatWrapper) {
+                    chatWrapper.style.pointerEvents = 'none';
+                    chatWrapper.style.filter = 'blur(4px)';
+                }
+            }, 20); // A very short delay is enough
+        }
+
+        function hideModal() {
+            console.log('Hiding modal...');
+            modal.classList.remove('show');
+            if (chatWrapper) {
+                chatWrapper.style.pointerEvents = 'auto';
+                chatWrapper.style.filter = 'none';
+            }
+            // After the animation finishes, set display to none to remove it from the layout.
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300); // This should match your CSS transition/animation duration.
+        }
+
+        function handleAccept() {
+            console.log('Consent ACCEPTED.');
+            // Here is where you enable the chat.
+            // For example, find the textarea and remove the 'disabled' attribute.
+            const chatInput = document.querySelector('.message-textarea');
+            if (chatInput) {
+                chatInput.disabled = false;
+                chatInput.placeholder = "Share what's on your mind...";
+            }
+            hideModal();
+        }
+
+        function handleDecline() {
+            console.log('Consent DECLINED.');
+            alert('Consent declined. You will be returned to the homepage.');
+            window.location.href = '/';
+        }
+
+        // Attach listeners
+        if (acceptBtn) {
+            acceptBtn.addEventListener('click', handleAccept, { once: true });
+        }
+        if (declineBtn) {
+            declineBtn.addEventListener('click', handleDecline, { once: true });
+        }
+        
+        // --- The Crucial Part for HTMX ---
+        // Before showing the modal, disable the chat input.
+        const chatInput = document.querySelector('.message-textarea');
+        if (chatInput) {
+            chatInput.disabled = true;
+            chatInput.placeholder = "Please accept the terms to begin...";
+        }
+
+        // Show the modal as soon as this script runs.
+        showModal();
+
+    })(); // End of IIFE
+</script>
+
+
 <!-- Chat History Section: Professional message area with avatars -->
 <div class="chat-wrapper">
     <div id="chat-history" class="chat-history custom-scrollbar">
@@ -121,8 +256,6 @@
                                             }
                                         });
                                     });
-
-
                                     </script>
             </div>
             
