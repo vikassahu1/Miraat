@@ -95,18 +95,10 @@ class FinalReportService:
 
 
 if __name__ == '__main__':
-    # --- 1. Load Environment Variables ---
-    # We need to go up two directories from 'app/services' to find the root .env file
-    # dotenv_path = os.path.join(os.path.dirname(__file__), '..', '..', '.env')
-    # load_dotenv(dotenv_path=dotenv_path)
-
     print("--- Running FinalReportService Test ---")
-
-    # --- 2. Create Realistic Dummy SessionData ---
-    # This simulates the state of the application right before the final report is generated.
     dummy_session_data = SessionData(
         session_id="test-session-123",
-        status="assessing", # The status right before we call the service
+        status="assessing",
         ai_question_to_ask_user=None,
         conversation_history=[
             ConversationTurn(role="user", content="I've been feeling so worried and stressed lately, I can't seem to relax."),
@@ -122,22 +114,14 @@ if __name__ == '__main__':
             answers={"q1": 3, "q2": 3, "q3": 2, "q4": 3, "q5": 2, "q6": 1, "q7": 2},
             final_score=16.0,
             interpretation="Moderately Severe Anxiety",
-            narrative_report=None # This is what we want to generate
+            narrative_report=None 
         )
     )
-
-    # --- 3. Initialize and Run the Service ---
-    # Create an instance of the service
     report_service = FinalReportService()
-
     if report_service.llm:
         print("\nGenerating final report...")
-        # Call the function with our dummy data
         final_report = report_service.generate_final_report(dummy_session_data)
-
-        # --- 4. Print the Structured Output ---
         print("\n--- ✅ Final Structured Report ---")
-        # Use .model_dump_json for pretty printing
         print(final_report.model_dump_json(indent=2))
         print("---------------------------------")
     else:

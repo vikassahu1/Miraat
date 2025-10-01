@@ -128,14 +128,6 @@ async def handle_conversation_turn(
             "error_message": error_message
         })
 
-# --- Endpoint 3: Handle workspace loading (for welcome screen) ---
-@router.get("/workspace_welcome", response_class=HTMLResponse)
-async def get_workspace_welcome(request: Request):
-    """Renders the welcome workspace"""
-    logging.info("[UI] GET /workspace_welcome called")
-    return templates.TemplateResponse("partials/workspace_welcome.html", {
-        "request": request
-    })
 
 # --- Endpoint 4: Assessment form submission ---
 @router.post("/submit_assessment", response_class=HTMLResponse)

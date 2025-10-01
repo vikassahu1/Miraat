@@ -247,7 +247,7 @@
 
     <!-- Action Buttons -->
     <div class="report-actions">
-        <button onclick="window.print()" class="download-btn">
+        <button id="download-btn"  class="download-btn">
             📄 Download/Print Report
         </button>
         <button onclick="location.reload()" class="new-assessment-btn">
@@ -256,19 +256,92 @@
     </div>
 </div>
 
+
 <script>
-// Set current date
-document.addEventListener('DOMContentLoaded', function() {
-    const dateElement = document.getElementById('assessment-date');
-    if (dateElement) {
-        dateElement.textContent = new Date().toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    }
-});
+    // Use an IIFE to run immediately and avoid polluting the global scope
+    (function() {
+        console.log("Report script is executing...");
+
+        // --- 1. Check for the required library ---
+        if (typeof html2pdf === 'undefined') {
+            console.error('html2pdf.js library is not loaded. Download will not work.');
+            const downloadBtn = document.getElementById('download-btn');
+            if(downloadBtn) {
+                downloadBtn.textContent = 'Error: PDF library missing';
+                downloadBtn.disabled = true;
+            }
+            return;
+        }
+
+        // --- 2. Set the current date ---
+        const dateElement = document.getElementById('assessment-date');
+        if (dateElement) {
+            dateElement.textContent = new Date().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            console.log("Date has been set.");
+        }
+
+        // --- 3. Attach the Download Listener ---
+        const downloadBtn = document.getElementById('download-btn');
+        if (downloadBtn) {
+            console.log("Download button found. Attaching listener.");
+            
+            // Define the click handler function
+            const handleDownloadClick = function() {
+                console.log("Download button clicked!");
+
+                // The element to be converted to PDF
+                const reportElement = document.querySelector('.results-report');
+                if (!reportElement) {
+                    console.error("Report element '.results-report' not found.");
+                    return;
+                }
+
+                // The action buttons to hide during PDF generation
+                const actionsElement = reportElement.querySelector('.report-actions');
+
+                // Temporarily hide the buttons for a clean PDF
+                if (actionsElement) {
+                    actionsElement.style.visibility = 'hidden';
+                }
+
+                const options = {
+                    margin: 0.5,
+                    filename: 'Miraat_Mental_Health_Report.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true }, // useCORS can help with images
+                    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+                };
+
+                // Generate the PDF
+                html2pdf().set(options).from(reportElement).save()
+                    .then(() => {
+                        console.log("PDF generation complete. Showing buttons again.");
+                        // Show the buttons again after PDF is saved/closed
+                        if (actionsElement) {
+                            actionsElement.style.visibility = 'visible';
+                        }
+                    })
+                    .catch((err) => {
+                        console.error("An error occurred during PDF generation:", err);
+                        // Ensure buttons are shown even if an error occurs
+                        if (actionsElement) {
+                            actionsElement.style.visibility = 'visible';
+                        }
+                    });
+            };
+
+            // Attach the event listener. We use { once: true } if this content is swapped
+            // and you want to prevent multiple listeners, but for a final report, a standard
+            // listener is usually fine.
+            downloadBtn.addEventListener('click', handleDownloadClick);
+
+        } else {
+            console.error("Download button with id 'download-btn' was not found.");
+        }
+
+    })(); 
 </script>
-
-
-
