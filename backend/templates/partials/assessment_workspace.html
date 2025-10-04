@@ -19,6 +19,7 @@
         
         <!-- Hidden session data to maintain state -->
         <input type="hidden" name="session_data_json" value='{{ session_data | tojson | safe }}'>
+        <input type="hidden" id="username-input" name="username" value="">
         
         <!-- Questions Container: Organized question cards -->
         <div class="questions-container">
@@ -101,4 +102,35 @@
             progressBar.style.width = progress + '%';
         }
     }
+
+    // Execute immediately instead of waiting for DOMContentLoaded
+    // This runs when HTMX swaps in the content
+    (function() {
+        const usernameInput = document.getElementById('username-input');
+        let username = localStorage.getItem('username');
+        
+        console.log('Attempting to inject username from localStorage:', username);
+        if (usernameInput && username) {
+            usernameInput.value = username;
+            console.log('Username "' + username + '" successfully injected into form');
+        } else {
+            console.warn('Username injection failed. Using anonymous_user instead.');
+            if (usernameInput) {
+                usernameInput.value = 'anonymous_user';
+                console.log('Set default username: anonymous_user');
+            } else {
+                console.error('Could not find username input field!');
+            }
+        }
+    })();
+    
+    // Also re-run the username injection after HTMX swaps content
+    document.addEventListener('htmx:afterSwap', function() {
+        const usernameInput = document.getElementById('username-input');
+        const username = localStorage.getItem('username');
+        if (usernameInput && username) {
+            usernameInput.value = username;
+            console.log('Username re-injected after HTMX swap');
+        }
+    });
 </script>

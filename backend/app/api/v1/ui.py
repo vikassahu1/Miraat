@@ -11,6 +11,7 @@ from app.services.conversation_service import ConversationService
 from app.services.triage_service import TriageService
 from app.services.assessment_service import AssessmentService
 from app.services.report_service import FinalReportService
+from app.privacy.redaction import redact_pii
 
 from app.logic.conversation import start_conversation as start_conversation_logic, respond_conversation as respond_conversation_logic
 from app.logic.assessment import submit_assessment as submit_assessment_logic
@@ -64,6 +65,12 @@ async def handle_conversation_turn(
     logging.info(f"[UI] POST /conversation_turn called with input: {user_input[:50]}...")
     
     try:
+        # --- PII Redaction ---
+        pii_input = redact_pii(user_input)
+        logging.info(f"[UI] User input after redaction")
+
+        user_input = pii_input if pii_input else user_input  # Fallback to original if redaction fails
+
         if session_data_json is None:
             # --- THIS IS THE FIRST TURN ---
             logging.info("[UI] First turn - starting new conversation")
@@ -134,13 +141,15 @@ async def handle_conversation_turn(
 async def submit_assessment_endpoint(
     request: Request,
     session_data_json: str = Form(...),
+    username: str = Form(...),
     assessment_service: AssessmentService = Depends(get_assessment_service),
     report_service: FinalReportService = Depends(get_report_service)
 ):
     """
     Handles submission of assessment answers and generates final report
     """
-    logging.info("[UI] POST /submit_assessment called")
+    logging.info(f"[UI] POST /submit_assessment called and udername received {username}")
+
     
     try:
         # Parse session data
@@ -172,12 +181,24 @@ async def submit_assessment_endpoint(
         
         logging.info(f"[UI] Assessment processing completed with status: {assessment_result.status}")
         logging.info(f"[UI] Generating final report: {assessment_result.assessment_data.narrative_report}")
+
+        # Save data to DB
+        try:
+            history_saving_flag = assessment_service.save_assessment_history(
+                username=username,
+                final_assessment_result=assessment_result 
+            )
+            logging.info(f"[UI] Assessment history saved: {history_saving_flag}")
+        except Exception as e:
+            logging.error(f"[UI] Error saving assessment history: {str(e)}")
+            history_saving_flag = False
         
         # Return results view directly for HTMX target replacement
         return templates.TemplateResponse("partials/results_workspace.html", {
             "request": request,
             "session_data": assessment_result.model_dump(),
-            "final_report": assessment_result.assessment_data.narrative_report.model_dump() if assessment_result.assessment_data and assessment_result.assessment_data.narrative_report else None
+            "final_report": assessment_result.assessment_data.narrative_report.model_dump() if assessment_result.assessment_data and assessment_result.assessment_data.narrative_report else None,
+            "history_saving_flag": history_saving_flag
         })
         
     except Exception as e:

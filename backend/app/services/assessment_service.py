@@ -2,17 +2,22 @@
 from app.services.schemas import SessionData, Pair, TestData, QuestionData, AssessmentReport
 from app.services.report_service import FinalReportService
 from core_logic.Assessment.test_inference import get_inference
+from app.services.security_service import EncryptionService
 from core_logic.Accessories.logger import logging
+from core_logic.Data.database import TestHistory
+from copy import deepcopy
 import json
 import os 
 
 
 class AssessmentService:
-    def __init__(self, knowledge_base: dict, test_data: dict, abbr_map: dict,report_service: FinalReportService):
+    def __init__(self, knowledge_base: dict, test_data: dict, abbr_map: dict,report_service: FinalReportService,db_session, encryption_service: EncryptionService):
         self.knowledge_base = knowledge_base
         self.test_data = test_data
         self.abbr_map = abbr_map
         self.report_service = report_service
+        self.db = db_session
+        self.encryption_service = encryption_service
 
     def _get_testname_and_abbreviation(self, disorder_name: str) -> Pair:
         """
@@ -98,4 +103,58 @@ class AssessmentService:
     
 
 
+    def save_assessment_history(self, username: str, final_assessment_result: SessionData) -> bool:
+            """
+            Encrypts sensitive fields within the session data and saves the complete
+            assessment history to the database as a JSONB object.
+            """
+            logging.info(f"[AssessmentService] Preparing to save encrypted history for user: {username}")
+            try:
+                # --- THE NEW ENCRYPTION LOGIC ---
+
+                # 1. Create a deep copy of the result object to avoid side effects.
+                # We don't want to encrypt the object that's being sent back to the user's UI.
+                data_to_save = deepcopy(final_assessment_result)
+
+                # 2. Identify and encrypt the sensitive fields WITHIN the object.
+                # a) Encrypt the conversation history
+                encrypted_history = []
+                for turn in data_to_save.conversation_history:
+                    encrypted_content = self.encryption_service.encrypt_data(turn.content)
+                    encrypted_history.append({"role": turn.role, "content": encrypted_content})
+                data_to_save.conversation_history = encrypted_history
+
+                # b) Encrypt the final narrative report
+                encrypted_report_str = ""
+                if data_to_save.assessment_data and data_to_save.assessment_data.narrative_report:
+                    report_string = data_to_save.assessment_data.narrative_report.model_dump_json()
+                    encrypted_report_str = self.encryption_service.encrypt_data(report_string)
+                    # Replace the original report object with the encrypted string
+                    data_to_save.assessment_data.narrative_report = encrypted_report_str
+                
+                # 3. Convert the entire modified Pydantic object to a dictionary.
+                # This dictionary is now a valid JSON structure.
+                session_data_dict = data_to_save.model_dump()
+                session_data_json_string = json.dumps(session_data_dict)
+
+                # 4. Create the new database record using the corrected data types.
+                new_history_entry = TestHistory(
+                    user_name=username,
+                    # Pass the dictionary directly to the JSONB column
+                    encrypted_session_data=session_data_json_string,
+                    # Pass the separately encrypted report string to the Text column
+                    encrypted_final_report=encrypted_report_str
+                )
+                
+                # 5. Add to session and commit
+                self.db.add(new_history_entry)
+                self.db.commit()
+                
+                logging.info(f"Successfully saved encrypted history for user {username}")
+                return True
+
+            except Exception as e:
+                self.db.rollback()
+                logging.error(f"Failed to save encrypted history for user {username}: {str(e)}")
+                return False
 

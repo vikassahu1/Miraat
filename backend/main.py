@@ -420,6 +420,7 @@ from app.services.conversation_service import ConversationService
 from app.services.triage_service import TriageService
 from app.services.assessment_service import AssessmentService
 from app.services.report_service import FinalReportService
+from app.services.security_service import EncryptionService
 
 
 # Getting the json data
@@ -459,7 +460,7 @@ except FileNotFoundError:
 conversation_service_instance = ConversationService(knowledge_base=KNOWLEDGE_BASE)
 triage_service_instance = TriageService(categories=list(KNOWLEDGE_BASE.keys()))
 report_service_instance = FinalReportService()
-assessment_service_instance = AssessmentService(knowledge_base=KNOWLEDGE_BASE, test_data=TEST_DATA, abbr_map=ABBREVIATION_MAP, report_service=report_service_instance) 
+encryption_service_instance = EncryptionService()
 
 # --- Dependency Injection Wiring ---
 # This is how we provide the live service instance to our API endpoints.
@@ -470,8 +471,8 @@ def get_conversation_service_instance_override():
 def get_triage_service_instance_override(): 
     return triage_service_instance
 
-def get_assessment_service_instance_override():
-    return assessment_service_instance
+def get_assessment_service_instance_override(db: Session = Depends(get_db)):
+    return AssessmentService(knowledge_base=KNOWLEDGE_BASE, test_data=TEST_DATA, abbr_map=ABBREVIATION_MAP, report_service=report_service_instance,db_session=db, encryption_service=encryption_service_instance) 
 
 def get_report_service_instance_override():
     return report_service_instance

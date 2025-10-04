@@ -1,5 +1,7 @@
 from sqlalchemy import create_engine, Column, String, Integer,DateTime
 from sqlalchemy.orm import sessionmaker,DeclarativeBase
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Text # Import Text
 from datetime import datetime  
 from dotenv import load_dotenv
 import os
@@ -30,10 +32,10 @@ class User(Base):
 class TestHistory(Base):
     __tablename__ = "test_history"
     test_id = Column(Integer, primary_key=True, autoincrement=True)
-    date = Column(DateTime, default=datetime.utcnow, nullable=False)
-    user_name = Column(String(50), nullable=False)  # Added length constraint
-    userinput = Column(String(500), nullable=False)  # Added length constraint
-    response = Column(String(5000), nullable=False)  # Increased length for responses
+    date = Column(DateTime, default=datetime.now, nullable=False)
+    user_name = Column(String(50), nullable=False)
+    encrypted_session_data = Column(Text, nullable=False) 
+    encrypted_final_report = Column(Text, nullable=False)
 
     
 

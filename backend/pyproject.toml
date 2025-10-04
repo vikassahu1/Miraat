@@ -22,7 +22,8 @@ dependencies = [
     "email-validator",
     "langchain_google_genai",
     "spacy",
-    "pytest"
+    "pytest",
+    "cryptography"
 ]
 
 [project.optional-dependencies]
