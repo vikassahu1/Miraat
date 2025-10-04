@@ -207,10 +207,6 @@ class ConversationService:
         print(f"Belief State Updated. Reason: '{reasoning}'. New Belief: {session_data['belief_state']}")
         
         return session_data
-    
-
-
-
 
     def check_funnel_completion(self, session_data: dict) -> str | None:
         candidates = session_data.get('belief_state') or {}
@@ -230,10 +226,6 @@ class ConversationService:
             return top_candidate_name
 
         return None
-    
-
-
-
 
     def generate_differentiating_question(self, session_data: dict) -> str:
         """
@@ -244,7 +236,7 @@ class ConversationService:
         logging.info(f"1. Session Data for Question Generation: {session_data}")
         
 
-        # --- 1. Extract Context (This part is the same) ---
+        # --- 1. Extract Context ---
         belief_state = session_data.get('belief_state') or {}
         conversation_history = session_data.get('conversation_history', [])
         current_status = session_data.get('status')
@@ -277,9 +269,7 @@ class ConversationService:
             formatted_history += f"{role}: {content}\n"
 
         # --- 2. The Chain of Thought Prompt & Structured Output ---
-        # Reliable LangChain structured output method.
         # Make sure you have self.structured_llm_plan = self.llm.with_structured_output(QuestionGenerationPlan)
-        
         prompt = ChatPromptTemplate.from_messages([
             ("system",
              "You are a master clinical intake strategist. Your goal is to determine the most effective question to ask next to clarify a user's situation. "

@@ -23,7 +23,8 @@ dependencies = [
     "langchain_google_genai",
     "spacy",
     "pytest",
-    "cryptography"
+    "cryptography",
+    "fpdf"
 ]
 
 [project.optional-dependencies]

@@ -416,6 +416,7 @@ async def chatbot_response(msg:TextInput):
 
 # <---  PHASE  2 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------->
 from app.api.v1 import ui as ui_api
+from app.api.v1 import history as history_api
 from app.services.conversation_service import ConversationService
 from app.services.triage_service import TriageService
 from app.services.assessment_service import AssessmentService
@@ -477,14 +478,20 @@ def get_assessment_service_instance_override(db: Session = Depends(get_db)):
 def get_report_service_instance_override():
     return report_service_instance
 
+def get_encryption_service_instance_override():
+    return encryption_service_instance
+
 app.dependency_overrides[ui_api.get_report_service] = get_report_service_instance_override
 app.dependency_overrides[ui_api.get_convo_service] = get_conversation_service_instance_override
 app.dependency_overrides[ui_api.get_triage_service] = get_triage_service_instance_override
 app.dependency_overrides[ui_api.get_assessment_service] = get_assessment_service_instance_override
+app.dependency_overrides[history_api.get_encryption_service] = get_encryption_service_instance_override 
+app.dependency_overrides[history_api.get_report_service] = get_report_service_instance_override
 
 
 
 app.include_router(ui_api.router, prefix="/ui", tags=["UI - Presentation"])
+app.include_router(history_api.router, prefix="/api/v1/history", tags=["History"])
 
 
 

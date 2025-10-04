@@ -4,99 +4,138 @@
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold text-center">Test History</h1>
+    <h1 class="text-2xl font-bold text-center">Your Assessment History</h1>
     <div class="h-1 w-16 bg-green-400 mx-auto my-4"></div>
     
-    <div id="historyTable" class="max-w-4xl mx-auto">
-        <p class="text-gray-600 text-center">Loading test history...</p>
+    <div id="history-container" class="max-w-4xl mx-auto">
+        <p class="text-gray-600 text-center">Loading your history...</p>
     </div>
 </div>
 {% endblock %}
 
 {% block all_scripts %}
 <script>
-    // Make deleteTest globally accessible
+    // --- Global Scope for Functions Called by HTML ---
+    window.downloadReport = function(testId) {
+        const username = localStorage.getItem("username");
+        if (!username) {
+            alert("Authentication error. Please log in again.");
+            return;
+        }
+        // This will trigger the browser's download functionality
+        window.location.href = `/api/v1/history/${testId}/report?user_name=${username}`;
+    };
+
     window.deleteTest = async function(testId) {
-        if (!confirm('Are you sure you want to delete this test?')) return;
+        const username = localStorage.getItem("username");
+        if (!username) {
+            alert("Authentication error. Please log in again.");
+            return;
+        }
+
+        if (!confirm('Are you sure you want to permanently delete this assessment history?')) return;
+        
         try {
-            const response = await fetch(`/delete-test?test_id=${testId}&user_name=${username}`, {
+            const response = await fetch(`/api/v1/history/${testId}?user_name=${username}`, {
                 method: 'DELETE',
             });
-            if (!response.ok) throw new Error('Failed to delete test');
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Failed to delete test');
+            }
+            
+            // If successful, refresh the history list
             fetchTestHistory();
+
         } catch (error) {
-            console.error(error);
-            alert('Error deleting test.');
+            console.error('Error deleting test:', error);
+            alert('Error deleting test: ' + error.message);
         }
     };
 
-    // Rest of your existing script
-    const username = localStorage.getItem("username");
-    
-    if (!username) {
-        alert("User not logged in. Redirecting to login...");
-        window.location.href = "/login";
-    } else {
-        fetchTestHistory();
-    }
+    // --- Main Logic ---
+    document.addEventListener('DOMContentLoaded', function() {
+        const username = localStorage.getItem("username");
+        
+        if (!username) {
+            // Handle not logged in state
+            const historyContainer = document.getElementById("history-container");
+            historyContainer.innerHTML = `
+                <div class="text-center p-8 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p class="font-semibold text-yellow-800">You are not logged in.</p>
+                    <p class="text-yellow-700 mt-2">Please <a href="/login" class="underline font-bold">log in</a> to view your assessment history.</p>
+                </div>
+            `;
+        } else {
+            fetchTestHistory();
+        }
+    });
 
     async function fetchTestHistory() {
+        const username = localStorage.getItem("username");
+        const historyContainer = document.getElementById("history-container");
+        historyContainer.innerHTML = '<p class="text-gray-600 text-center">Loading your history...</p>';
+
         try {
-            const response = await fetch(`/test-history?user_name=${username}`);
+            const response = await fetch(`/api/v1/history/user-history?user_name=${username}`);
             if (!response.ok) throw new Error("Failed to fetch test history");
             
             const data = await response.json();
             renderTestHistory(data);
         } catch (error) {
             console.error(error);
-            document.getElementById("historyTable").innerHTML = 
-                '<p class="text-red-500 text-center">Error loading test history.</p>';
+            historyContainer.innerHTML = '<p class="text-red-500 text-center">Error loading test history.</p>';
         }
     }
 
     function renderTestHistory(data) {
-        const historyTable = document.getElementById("historyTable");
+        const historyContainer = document.getElementById("history-container");
         
         if (data.length === 0) {
-            historyTable.innerHTML = '<p class="text-gray-500 text-center">No test history found.</p>';
+            historyContainer.innerHTML = `
+                <div class="text-center p-8 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="font-semibold text-blue-800">No History Found</p>
+                    <p class="text-blue-700 mt-2">You have not completed any assessments yet. <a href="/assess" class="underline font-bold">Start a new one</a>.</p>
+                </div>
+            `;
             return;
         }
 
         const tableHTML = `
-            <div class="grid gap-6 bg-gray-50 p-6 rounded-lg">
-                ${data.map(test => `
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow overflow-hidden">
-                        <div class="p-4">
-                            <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-start">
-                                <div class="space-y-1 min-w-0">
-                                    <div class="flex items-center">
-                                        <span class="text-xs font-medium text-gray-500 w-20">Test ID:</span>
-                                        <span class="text-sm text-gray-700 truncate">${test.test_id}</span>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <span class="text-xs font-medium text-gray-500 w-20">Date:</span>
-                                        <span class="text-sm text-gray-700">${new Date(test.date).toLocaleString()}</span>
-                                    </div>
-                                </div>
-                                <div class="flex justify-end md:relative">
-                                    <button onclick="deleteTest('${test.test_id}')" 
-                                            class="text-sm px-3 py-1.5 bg-red-500 text-white rounded hover:bg-red-600 transition-colors font-medium shadow-sm flex-shrink-0">
+            <div class="overflow-x-auto bg-white rounded-lg shadow border border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Test ID</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Completed</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        ${data.map((test, index) => `
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">${index + 1}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${test.test_id}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date(test.date).toLocaleString()}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                    <button onclick="downloadReport(${test.test_id})" 
+                                            class="px-3 py-1.5 bg-green-500 text-white rounded hover:bg-green-600 transition-colors font-medium shadow-sm">
+                                        Download PDF
+                                    </button>
+                                    <button onclick="deleteTest(${test.test_id})" 
+                                            class="px-3 py-1.5 bg-red-500 text-white rounded hover:bg-red-600 transition-colors font-medium shadow-sm">
                                         Delete
                                     </button>
-                                </div>
-                            </div>
-                            <div class="mt-4 space-y-2">
-                                <div class="text-xs font-medium text-gray-500">User Input</div>
-                                <div class="text-sm text-gray-700 bg-gray-50 rounded p-2">${test.userinput}</div>
-                                <div class="text-xs font-medium text-gray-500 mt-3">Response</div>
-                                <div class="text-sm text-gray-700 bg-gray-50 rounded p-2">${test.response}</div>
-                            </div>
-                        </div>
-                    </div>
-                `).join('')}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
             </div>`;
             
-        historyTable.innerHTML = tableHTML;
+        historyContainer.innerHTML = tableHTML;
     }
 </script>
 {% endblock %}
