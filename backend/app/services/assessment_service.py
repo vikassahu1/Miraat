@@ -110,7 +110,6 @@ class AssessmentService:
             """
             logging.info(f"[AssessmentService] Preparing to save encrypted history for user: {username}")
             try:
-                # --- THE NEW ENCRYPTION LOGIC ---
 
                 # 1. Create a deep copy of the result object to avoid side effects.
                 # We don't want to encrypt the object that's being sent back to the user's UI.
@@ -124,8 +123,9 @@ class AssessmentService:
                     encrypted_history.append({"role": turn.role, "content": encrypted_content})
                 data_to_save.conversation_history = encrypted_history
 
-                # b) Encrypt the final narrative report
+                # b) Encrypt the final narrative report and the session data
                 encrypted_report_str = ""
+
                 if data_to_save.assessment_data and data_to_save.assessment_data.narrative_report:
                     report_string = data_to_save.assessment_data.narrative_report.model_dump_json()
                     encrypted_report_str = self.encryption_service.encrypt_data(report_string)
@@ -141,7 +141,7 @@ class AssessmentService:
                 new_history_entry = TestHistory(
                     user_name=username,
                     # Pass the dictionary directly to the JSONB column
-                    encrypted_session_data=session_data_json_string,
+                    encrypted_session_data=self.encryption_service.encrypt_data(session_data_json_string),
                     # Pass the separately encrypted report string to the Text column
                     encrypted_final_report=encrypted_report_str
                 )

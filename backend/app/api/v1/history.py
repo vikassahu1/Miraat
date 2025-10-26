@@ -59,24 +59,59 @@ def download_decrypted_report(
 
     # 1. Decrypt the full session data
     try:
-        # Assuming record.encrypted_session_data is the full JSON string
+        logging.info(f"Retrieved encrypted_session_data type: {type(record.encrypted_session_data)}")
+        logging.info(f"Retrieved encrypted_session_data length: {len(record.encrypted_session_data) if hasattr(record.encrypted_session_data, '__len__') else 'unknown'}")
+        logging.info(f"First 50 chars: {str(record.encrypted_session_data)[:50]}")
+        
+        # Decrypt the entire session data JSON
         decrypted_session_json = encryption_service.decrypt_data(record.encrypted_session_data)
-        # Re-create the Pydantic object from the decrypted JSON
-        session_data = SessionData(**json.loads(decrypted_session_json))
+        session_data_dict = json.loads(decrypted_session_json)
+        
+        # 2. Decrypt the nested encrypted fields BEFORE creating the Pydantic object
+        
+        # a) Decrypt conversation history
+        if "conversation_history" in session_data_dict:
+            decrypted_history = []
+            for turn in session_data_dict["conversation_history"]:
+                decrypted_content = encryption_service.decrypt_data(turn["content"])
+                decrypted_history.append({"role": turn["role"], "content": decrypted_content})
+            session_data_dict["conversation_history"] = decrypted_history
+        
+        # b) Decrypt the narrative report
+        if (session_data_dict.get("assessment_data") and 
+            session_data_dict["assessment_data"].get("narrative_report") and
+            isinstance(session_data_dict["assessment_data"]["narrative_report"], str)):
+            
+            encrypted_report = session_data_dict["assessment_data"]["narrative_report"]
+            decrypted_report_json = encryption_service.decrypt_data(encrypted_report)
+            session_data_dict["assessment_data"]["narrative_report"] = json.loads(decrypted_report_json)
+        
+        # 3. Now create the Pydantic object with fully decrypted data
+        session_data = SessionData(**session_data_dict)
+        
     except Exception as e:
         logging.error(f"Decryption failed for test_id {test_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to decrypt session data.")
 
     # 2. Regenerate the structured FinalReport object using your existing service
     # This ensures the report is always up-to-date with your latest prompts/logic
+    # In history.py, after line 99:
+
     try:
         structured_report = report_service.generate_final_report(session_data)
+        logging.info("Report generated successfully, proceeding to PDF generation...")
     except Exception as e:
         logging.error(f"Report generation failed for test_id {test_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to generate structured report.")
 
     # 3. Generate the PDF using the new PDF service
-    pdf_bytes = generate_pdf_from_report(session_data, structured_report)
+    try:
+        logging.info("Starting PDF generation...")
+        pdf_bytes = generate_pdf_from_report(session_data, structured_report)
+        logging.info(f"PDF generated successfully. Size: {len(pdf_bytes)} bytes")
+    except Exception as e:
+        logging.error(f"PDF generation failed for test_id {test_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to generate PDF.")
 
     # 4. Return the PDF as a downloadable file
     return Response(

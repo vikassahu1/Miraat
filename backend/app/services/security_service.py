@@ -39,27 +39,38 @@ class EncryptionService:
     def decrypt_data(self, encrypted_data) -> str:
         """
         Decrypts data from database and returns the original string.
-        Handles both string and bytes input from database.
+        Handles string, bytes, memoryview, and any other database return types.
         """
         try:
-            # Handle different input types from database
+            # Convert input to bytes for processing
             if isinstance(encrypted_data, str):
-                # String from database - decode from base64
-                encrypted_bytes = base64.b64decode(encrypted_data)
+                # String from database - this is what we expect
+                encrypted_data_bytes = encrypted_data.encode('utf-8')
             elif isinstance(encrypted_data, bytes):
-                # Bytes from database - could be raw bytes or base64-encoded bytes
-                try:
-                    # Try to decode as base64 first
-                    encrypted_bytes = base64.b64decode(encrypted_data)
-                except:
-                    # If that fails, assume it's raw encrypted bytes
-                    encrypted_bytes = encrypted_data
+                # Already bytes
+                encrypted_data_bytes = encrypted_data
+            elif isinstance(encrypted_data, memoryview):
+                # PostgreSQL sometimes returns memoryview
+                encrypted_data_bytes = bytes(encrypted_data)
             else:
-                raise ValueError(f"Unsupported data type for decryption: {type(encrypted_data)}")
+                # Try to convert whatever it is to bytes
+                encrypted_data_bytes = str(encrypted_data).encode('utf-8')
             
-            # Decrypt the bytes
-            decrypted_bytes = self.fernet.decrypt(encrypted_bytes)
+            # Decode from base64 to get the actual encrypted bytes
+            try:
+                actual_encrypted_bytes = base64.b64decode(encrypted_data_bytes)
+            except Exception as decode_error:
+                raise ValueError(f"Failed to decode base64: {decode_error}")
+            
+            # Decrypt using Fernet
+            try:
+                decrypted_bytes = self.fernet.decrypt(actual_encrypted_bytes)
+            except Exception as decrypt_error:
+                raise ValueError(f"Fernet decryption failed: {decrypt_error}")
+            
+            # Return as UTF-8 string
             return decrypted_bytes.decode('utf-8')
             
         except Exception as e:
-            raise ValueError(f"Decryption failed: {str(e)}")
+            # Detailed error for debugging
+            raise ValueError(f"Decryption failed: {str(e)}. Input type: {type(encrypted_data)}, Input length: {len(encrypted_data) if hasattr(encrypted_data, '__len__') else 'unknown'}")

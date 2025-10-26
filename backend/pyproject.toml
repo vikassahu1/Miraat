@@ -24,7 +24,8 @@ dependencies = [
     "spacy",
     "pytest",
     "cryptography",
-    "fpdf"
+    "fpdf",
+    "pdfkit"
 ]
 
 [project.optional-dependencies]
