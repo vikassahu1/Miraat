@@ -3,7 +3,7 @@
 {% block title %}Test History{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
+<div class="container h-[calc(100vh-70px)] mx-auto px-4 py-8">
     <h1 class="text-2xl font-bold text-center">Your Assessment History</h1>
     <div class="h-1 w-16 bg-green-400 mx-auto my-4"></div>
     
@@ -96,7 +96,7 @@
             historyContainer.innerHTML = `
                 <div class="text-center p-8 bg-blue-50 border border-blue-200 rounded-lg">
                     <p class="font-semibold text-blue-800">No History Found</p>
-                    <p class="text-blue-700 mt-2">You have not completed any assessments yet. <a href="/assess" class="underline font-bold">Start a new one</a>.</p>
+                    <p class="text-blue-700 mt-2">You have not completed any assessments yet. <a href="/ui" class="underline font-bold">Start a new one</a>.</p>
                 </div>
             `;
             return;

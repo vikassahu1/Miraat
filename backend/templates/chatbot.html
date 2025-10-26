@@ -1,59 +1,104 @@
 {% extends "base.html" %}
-{% block title %}Helplines{% endblock %}
-
-
+{% block title %}ChatBot{% endblock %}
 
 {% block content %}
 <!-- Chat Area -->
-<main id="chatbot_container" class="flex-1 bg-cyan-300 mx-auto h-[75vh] overflow-y-auto p-4 space-y-4 sm:w-[73vw]">
-    <!-- chatbot content will be displayed here -->
+<main id="chatbot_container" class="flex-1 shadow-2xl rounded-xl mx-auto h-[75vh] overflow-y-auto p-6 space-y-4 sm:w-[73vw] transition duration-300" style="background: linear-gradient(to bottom right, #e0e7ff, #ddd6fe, #ccfbf1); border: 2px solid #5eead4;">
+    <!-- Chatbot messages will be dynamically inserted here by JS. 
+         Message bubbles are styled by .chatbot-message and .user-message classes below. -->
 </main>
 
-
-
-
 <!-- Input Area -->
-<footer id="chatbot_container" class="bg-indigo-800 px-4 py-3 flex items-center gap-2 mx-auto sm:w-[73vw]">
+<footer class="shadow-xl rounded-b-xl mx-auto sm:w-[73vw] px-4 py-3 flex items-center gap-3" style="background: linear-gradient(to right, #c7d2fe, #ddd6fe, #99f6e4); border-top: 2px solid #5eead4;">
     <input 
         id="input_container"
         type="text" 
-        placeholder="Type your message..." 
-        class="w-full p-2 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+        placeholder="Share your thoughts..."
+        class="w-full p-2 rounded-lg text-gray-900 shadow-sm transition outline-none font-medium"
+        style="background: #eef2ff; border: 2px solid #a5b4fc;"
+        autocomplete="off"
     >
     <button 
-        id = "send_button"
-        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md transition duration-300">
+        id="send_button"
+        class="transition-all duration-200 text-white px-6 py-2 rounded-lg font-semibold shadow-lg focus:outline-none"
+        style="background: linear-gradient(to right, #14b8a6, #10b981);"
+        onmouseover="this.style.background='linear-gradient(to right, #0d9488, #059669)'"
+        onmouseout="this.style.background='linear-gradient(to right, #14b8a6, #10b981)'"
+    >
         Send
     </button>
 </footer>
 
+<style>
+/* Elegant chat bubble styling */
+.chatbot-message {
+    background: linear-gradient(135deg, #a5b4fc 0%, #818cf8 100%);
+    color: #1e1b4b;
+    border-radius: 1.5rem 1.5rem 1.5rem 0.25rem;
+    padding: 0.875rem 1.25rem;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    max-width: 72%;
+    align-self: flex-start;
+    margin-left: 0.5rem;
+    margin-right: auto;
+    border: 2px solid rgba(165, 180, 252, 0.6);
+    font-weight: 500;
+    line-height: 1.6;
+}
 
+.user-message {
+    background: linear-gradient(135deg, #5eead4 0%, #2dd4bf 100%);
+    color: #134e4a;
+    border-radius: 1.5rem 1.5rem 0.25rem 1.5rem;
+    padding: 0.875rem 1.25rem;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 4px 12px rgba(45, 212, 191, 0.35);
+    max-width: 72%;
+    align-self: flex-end;
+    margin-right: 0.5rem;
+    margin-left: auto;
+    border: 2px solid rgba(94, 234, 212, 0.7);
+    font-weight: 500;
+    line-height: 1.6;
+}
+
+/* Add smooth scroll behavior */
+#chatbot_container {
+    scroll-behavior: smooth;
+}
+
+/* Custom scrollbar for chat area */
+#chatbot_container::-webkit-scrollbar {
+    width: 8px;
+}
+
+#chatbot_container::-webkit-scrollbar-track {
+    background: rgba(199, 210, 254, 0.3);
+    border-radius: 10px;
+}
+
+#chatbot_container::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, #14b8a6, #0d9488);
+    border-radius: 10px;
+}
+
+#chatbot_container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, #0d9488, #0f766e);
+}
+</style>
 {% endblock %}
 
-
-
-
 {% block all_scripts%}
-
-    <!-- Page can be accesses only when logged in -->
     <script>
         window.onload = function() {
             // Check if the token is present in localStorage
             const token = localStorage.getItem("authToken");
             if (!token) {
-                // If no token, redirect to login page
                 alert("You need to login to access this page");
                 window.location.href = '/login';
             }
-            else{
-                console.log(token);
-            }
         };
     </script>
-
-
-
     <script src="../static/js/chatbot.js"></script>
 {% endblock %}
-
-
