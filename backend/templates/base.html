@@ -1,22 +1,26 @@
 <!-- Common menu and footer  -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     <title>Miraat-{% block title %} <!-- title  --> {% endblock%}</title>
     <link rel="stylesheet" href="../static/css/output.css">
 </head>
+
 <body class="bg-sky-950 text-black font-sans relative">
 
     <!-- Full Page Background Pattern -->
-    <div class="absolute inset-0 -z-10 h-full w-full bg-white bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1.5px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:6rem_4rem]"></div>
-    
+    <div
+        class="absolute inset-0 -z-10 h-full w-full bg-white bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1.5px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:6rem_4rem]">
+    </div>
+
 
 
     <!-- Main Content - Navbar and Hero Section -->
-<nav class="relative z-10 flex justify-between items-center h-[70px] px-10 md:px-15 ">
+    <nav class="relative z-10 flex justify-between items-center h-[70px] px-10 md:px-15 ">
         <div class="text-2xl font-bold font-serif rounded-md">
             Miraat
         </div>
@@ -34,100 +38,76 @@
 
         <!-- this will toggle to profile and login button  -->
         <div id="profile_login" class="space-x-4 hidden font-sans font-semibold md:flex">
-
             <!-- Before Login -->
-            <a id="login_button" href="/login" class="bg-green-300 hover:bg-green-200 text-lg rounded-full px-10 py-2">Login</a>
-
-
+            <a id="login_button" href="/login"
+                class="bg-green-300 hover:bg-green-200 text-lg rounded-full px-10 py-2">Login</a>
             <!-- After Login -->
-            <div id="profileSection" class="hidden relative flex flex-col bg-green-300  text-base rounded-full px-10 py-2 cursor-pointer">
+            <div id="profileSection"
+                class="hidden relative flex flex-col bg-green-300  text-base rounded-full px-10 py-2 cursor-pointer">
                 <div class="flex items-center space-x-2">
                     <img id="profileIcon" class="w-8 h-8 rounded-full" src="../static/images/user.png" alt="Profile">
-                    <span id="profileName" class="font-light"> 
+                    <span id="profileName" class="font-light">
                         <!-- Name of the user will be displayed here  -->
                     </span>
                 </div>
-                <div id="dropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 z-20">
+                <div id="dropdownMenu"
+                    class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 z-20">
                     <a class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
                 </div>
-
-
-                <!-- Script to display user name after login -->
-
             </div>
 
 
             <script>
-                document.getElementById("profileSection").addEventListener("click", function() {
+                document.getElementById("profileSection").addEventListener("click", function () {
                     document.getElementById("dropdownMenu").classList.toggle("hidden");
                 });
             </script>
         </div>
 
-
-
-
         <div class="md:hidden">
             <button id="menu-button" class="text-xl">&#9776;</button>
         </div>
-</nav>
+    </nav>
 
-
-
-
-
-
-
-
-
-{% block content %}
+    {% block content %}
     <!-- Here the block will be placed  -->
-{% endblock %}
+    {% endblock %}
 
-
-
-
-
-<!-- Footer Section -->
-<footer class="bg-black text-white py-3">
-    <div class="text-center">
-        <p>&copy; <span id="year"></span> All rights reserved | Made with ❤️ by Vikas</p>
-    </div>
-</footer>
-
-
-
-
+    <!-- Footer Section -->
+    <footer class="bg-black text-white py-3">
+        <div class="text-center">
+            <p>&copy; <span id="year"></span> All rights reserved | Made with ❤️ by Vikas</p>
+        </div>
+    </footer>
 
     <!-- Specific JS for base page -->
-
     <script>
 
         // Add this function to your existing script or in a separate .js file
-function checkAndUpdateProfile() {
-    // Get elements
-    const profileLoginDiv = document.getElementById('profile_login');
-    const loginButton = document.getElementById('login_button');
-    const profileSection = document.getElementById('profileSection');
-    const profileName = document.getElementById('profileName');
+        function checkAndUpdateProfile() {
+            // Get elements
+            const profileLoginDiv = document.getElementById('profile_login');
+            const loginButton = document.getElementById('login_button');
+            const profileSection = document.getElementById('profileSection');
+            const profileName = document.getElementById('profileName');
 
-    // Get username from localStorage
-    const username = localStorage.getItem('username');
+            // Get username from localStorage
+            const username = localStorage.getItem('username');
 
-    if (username) {
-        // Show profile_login div
-        profileLoginDiv.classList.remove('hidden');
-        // Hide login button
-        loginButton.classList.add('hidden');
-        // Show profile section
-        profileSection.classList.remove('hidden');
-        // Set username in profileName
-        profileName.textContent = username;
-    }
-}
+            if (username) {
+                // Show profile_login div
+                profileLoginDiv.classList.remove('hidden');
+                // Hide login button
+                loginButton.classList.add('hidden');
+                // Show profile section
+                profileSection.classList.remove('hidden');
+                // Set username in profileName
+                profileName.textContent = username;
+            }
+        }
 
-// Call the function when page loads
-document.addEventListener('DOMContentLoaded', checkAndUpdateProfile);
+        // Call the function when page loads
+        document.addEventListener('DOMContentLoaded', checkAndUpdateProfile);
 
 
         // For the hamburger menu 
@@ -140,25 +120,19 @@ document.addEventListener('DOMContentLoaded', checkAndUpdateProfile);
         });
 
 
-    // Logout logic 
-    document.getElementById("dropdownMenu").addEventListener("click", function(event) {
-                     localStorage.clear();
-                     window.location.href = "/";});
-
+        // Logout logic 
+        document.getElementById("dropdownMenu").addEventListener("click", function (event) {
+            localStorage.clear();
+            window.location.href = "/";
+        });
     </script>
 
-
-
-    
-
-
-
     <!-- Specific scripts for the perticular page  -->
-    {% block all_scripts%} 
-       <!-- all scripts will be placed here  -->
+    {% block all_scripts%}
+    <!-- all scripts will be placed here  -->
     {% endblock %}
 
 
 </body>
-</html>
 
+</html>

@@ -66,7 +66,6 @@
 <body class="main-container">
 
     <div id="content-container" class="content-wrapper">
-            <!-- Chat Header: Professional top bar with status indicator -->
             <div id="chat-heading" class="chat-header">
                 <div class="chat-header-left">
                     <div class="chat-status-indicator"></div>
@@ -86,12 +85,64 @@
         </div>
 
 
+    <!-- For redirect to the main page  -->
+    <script>
+            window.onload = function() {
+                // Check if the token is present in localStorage
+                const token = localStorage.getItem("authToken");
+                if (!token) {
+                    alert("You need to login to access this page");
+                    window.location.href = '/login';
+                }
+            };
+    </script>
+
     <script>
         // HTMX Event Handlers for Enhanced User Experience
         
+        // When a request starts, show loading indicator in input area
+        document.body.addEventListener('htmx:beforeRequest', function(evt) {
+            if (evt.detail.elt.classList.contains('input-form')) {
+                console.log('🚀 Request starting - showing loader in input area');
+                
+                // Show the loading indicator below the input
+                const loader = document.getElementById('loading-message');
+                if (loader) {
+                    loader.classList.add('show');
+                    loader.style.display = 'block';
+                }
+                
+                // Hide the textarea and button (they'll be replaced by loader)
+                const textarea = document.querySelector('.message-textarea');
+                const button = document.querySelector('.submit-button');
+                if (textarea) textarea.style.visibility = 'hidden';
+                if (button) button.style.visibility = 'hidden';
+            }
+        });
+
         // Auto-scroll chat to bottom when new messages arrive
-        // This ensures users always see the latest message without manual scrolling
         document.body.addEventListener('htmx:afterSwap', function(evt) {
+            console.log('✅ Response received - hiding loader');
+            
+            // Hide the loading indicator
+            const loader = document.getElementById('loading-message');
+            if (loader) {
+                loader.classList.remove('show');
+                loader.style.display = 'none';
+            }
+            
+            // Show textarea and button again
+            const textarea = document.querySelector('.message-textarea');
+            const button = document.querySelector('.submit-button');
+            if (textarea) {
+                textarea.style.visibility = 'visible';
+                textarea.value = '';
+                textarea.style.height = 'auto';
+                textarea.focus();
+            }
+            if (button) button.style.visibility = 'visible';
+            
+            // Scroll chat history to bottom
             const chatHistory = document.getElementById('chat-history');
             if (chatHistory) {
                 chatHistory.scrollTop = chatHistory.scrollHeight;
@@ -126,7 +177,6 @@
                 }
             }
         });
-
     </script>
 </body>
 </html>

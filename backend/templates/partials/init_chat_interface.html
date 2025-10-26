@@ -196,7 +196,7 @@
         <form class="input-form" hx-post="/ui/conversation_turn" 
               hx-target="#chat-container" 
               hx-swap="innerHTML"
-              hx-indicator="#chat-loading">
+              hx-disabled-elt=".submit-button, .message-textarea">
             
             
             <div class="form-container">
@@ -231,15 +231,15 @@
                                     </script>
             </div>
             
-            <!-- Professional loading indicator with typing animation -->
-            <div id="chat-loading" class="loading-indicator htmx-indicator">
+            <!-- Loading indicator in input area -->
+            <div id="loading-message" class="input-loading-indicator" style="display: none;">
                 <div class="loading-content">
                     <div class="typing-dots">
                         <div class="typing-dot"></div>
                         <div class="typing-dot"></div>
                         <div class="typing-dot"></div>
                     </div>
-                    <span>AI is thinking...</span>
+                    <span style="margin-left: 12px; color: #6b7280; font-size: 0.875rem; font-weight: 500;">AI is analyzing your message...</span>
                 </div>
             </div>
         </form>
