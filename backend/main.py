@@ -206,8 +206,13 @@ async def get_helplines(request: Request):
     # Pass helpline data to the template
     return templates.TemplateResponse("helplines.html", {"request": request, "helplines": helplines})
 # <------------------------------------------------------------------------------------------------------------------------------------------------------------->
-        
+    
 
+# <----------------------------------------------------------------------- About Section --------------------------------------------------------------------------->
+@app.get("/about")
+async def about(request: Request):
+    return templates.TemplateResponse("about.html", {"request": request})
+# <------------------------------------------------------------------------------------------------------------------------------------------------------------->
 
 
 

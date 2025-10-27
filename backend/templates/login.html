@@ -4,31 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Miraat-Login/Register</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../static/css/output.css">
+    
 </head>
 <body class="h-[100vh] flex flex-col justify-between">
 
     <!-- Full Page Background Pattern -->
     <div class="absolute inset-0 -z-10 h-full w-full bg-white bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1.5px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:6rem_4rem]"></div>
 
-    <nav class="relative z-10 flex justify-between items-center h-[70px] px-10 md:px-15">
+    <!-- Main Content - Navbar and Hero Section -->
+    <nav class="relative z-10 flex justify-between items-center h-[70px] px-10 md:px-15 ">
         <div class="text-2xl font-bold font-serif rounded-md">
             Miraat
         </div>
+
         <div class="space-x-9 text-lg font-semibold font-sans text-black hidden md:flex">
             <a href="/" class="hover:text-green-300">Home</a>
             <a href="/ui" class="hover:text-green-300">Assessment</a>
             <a href="/chatbot" class="hover:text-green-300 ">Help Chat</a>
             <a href="/helplines" class="hover:text-green-300 ">Helplines</a>
             <a href="/history" class="hover:text-green-300 ">History</a>
-            <a href="/" class="hover:text-green-300 ">About</a>
+            <a href="/about" class="hover:text-green-300 ">About</a>
         </div>
 
 
-        <!-- This thing is just dummy here no importance  -->
-        <div class="space-x-4 hidden font-sans font-semibold md:flex opacity-0">
-            <a class="hover:text-sky-300 bg-green-300 text-lg rounded-full px-10 py-2">Login</a>
+
+        <!-- this will toggle to profile and login button  -->
+        <div id="profile_login" class="space-x-4 hidden font-sans font-semibold md:flex">
+            <!-- Before Login -->
+            <a id="login_button" href="/login"
+                class="bg-green-300 hover:bg-green-200 text-lg rounded-full px-10 py-2">Login</a>
+            <!-- After Login -->
+            <div id="profileSection"
+                class="hidden relative flex flex-col bg-green-300  text-base rounded-full px-10 py-2 cursor-pointer">
+                <div class="flex items-center space-x-2">
+                    <img id="profileIcon" class="w-8 h-8 rounded-full" src="../static/images/user.png" alt="Profile">
+                    <span id="profileName" class="font-light">
+                        <!-- Name of the user will be displayed here  -->
+                    </span>
+                </div>
+                <div id="dropdownMenu"
+                    class="hidden absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-2 z-20">
+                    <a class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                </div>
+            </div>
         </div>
+
         <div class="md:hidden">
             <button id="menu-button" class="text-xl">&#9776;</button>
         </div>
@@ -36,7 +57,38 @@
 
 
     </nav>
-
+        <!-- Mobile Menu (Hidden by default) -->
+        <div id="mobile-menu" class="hidden md:hidden absolute left-0 right-0 top-[70px] z-20 bg-white shadow-lg">
+            <div class="px-6 py-4 space-y-3">
+                <a href="/" class="block text-lg font-semibold hover:text-green-300 py-2">Home</a>
+                <a href="/ui" class="block text-lg font-semibold hover:text-green-300 py-2">Assessment</a>
+                <a href="/chatbot" class="block text-lg font-semibold hover:text-green-300 py-2">Help Chat</a>
+                <a href="/helplines" class="block text-lg font-semibold hover:text-green-300 py-2">Helplines</a>
+                <a href="/history" class="block text-lg font-semibold hover:text-green-300 py-2">History</a>
+                <a href="/about" class="block text-lg font-semibold hover:text-green-300 py-2">About</a>
+                
+                <div id="mobile_profile_login" class="space-x-4 md:hidden font-sans font-semibold flex">
+                    <!-- Before Login -->
+                    <a id="mobile_login_button" href="/login"
+                        class="bg-green-300 hover:bg-green-200 text-lg rounded-full px-10 py-2">Login</a>
+                    <!-- After Login -->
+                    <div id="mobile_profileSection"
+                        class="hidden relative flex flex-col bg-green-300  text-base rounded-full px-10 py-2 cursor-pointer">
+                        <div class="flex items-center space-x-2">
+                            <img id="mobile_profileIcon" class="w-8 h-8 rounded-full" src="../static/images/user.png" alt="Profile">
+                            <span id="mobile_profileName" class="font-light">
+                                <!-- Name of the user will be displayed here  -->
+                            </span>
+                        </div>
+                        <div id="mobile_dropdownMenu"
+                            class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 z-20">
+                            <a class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                        </div>
+                    </div>
+                </div>
+    
+            </div>
+        </div>
 
 
     <div class="flex-grow flex items-center justify-center px-4 sm:px-6 lg:px-8">
@@ -154,17 +206,6 @@
     </footer>
 
 
-    <!-- JavaScript for Mobile Menu Toggle -->
-    <script>
-        document.getElementById("year").textContent = new Date().getFullYear();
-        const menuButton = document.getElementById('menu-button');
-        const mobileMenu = document.getElementById('mobile-menu');
-
-        menuButton.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-        });
-    </script>
-
 
     <script type="module" src="../static/js/register.js"></script>
 
@@ -179,6 +220,77 @@
             document.getElementById('loginContainer').classList.remove('hidden');
         }
     </script>
+
+
+
+ <!-- Specific JS for base page -->
+ <script>
+    // Check and update profile for both desktop and mobile
+    function checkAndUpdateProfile() {
+        const username = localStorage.getItem('username');
+
+        // Desktop elements
+        const profileLoginDiv = document.getElementById('profile_login');
+        const loginButton = document.getElementById('login_button');
+        const profileSection = document.getElementById('profileSection');
+        const profileName = document.getElementById('profileName');
+
+        // Mobile elements
+        const mobileLoginButton = document.getElementById('mobile_login_button');
+        const mobileProfileSection = document.getElementById('mobile_profileSection');
+        const mobileProfileName = document.getElementById('mobile_profileName');
+
+        if (username) {
+            // Desktop
+            loginButton.classList.add('hidden');
+            profileSection.classList.remove('hidden');
+            profileName.textContent = username;
+
+            // Mobile
+            mobileLoginButton.classList.add('hidden');
+            mobileProfileSection.classList.remove('hidden');
+            mobileProfileName.textContent = username;
+        }
+    }
+
+    // Call the function when page loads
+    document.addEventListener('DOMContentLoaded', checkAndUpdateProfile);
+
+    // Set year in footer
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Hamburger menu toggle
+    const menuButton = document.getElementById('menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    menuButton.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+    });
+
+    // Desktop profile dropdown toggle
+    document.getElementById("profileSection").addEventListener("click", function () {
+        document.getElementById("dropdownMenu").classList.toggle("hidden");
+    });
+
+    // Desktop logout logic 
+    document.getElementById("dropdownMenu").addEventListener("click", function (event) {
+        localStorage.clear();
+        window.location.href = "/";
+    });
+
+    // Mobile profile dropdown toggle
+            document.getElementById("mobile_profileSection").addEventListener("click", function () {
+        document.getElementById("mobile_dropdownMenu").classList.toggle("hidden");
+    });
+
+    // Mobile logout logic 
+    document.getElementById("mobile_dropdownMenu").addEventListener("click", function (event) {
+        localStorage.clear();
+        window.location.href = "/";
+    });
+
+
+</script>
 
 
 </body>
