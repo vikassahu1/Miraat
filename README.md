@@ -245,45 +245,46 @@ mindfulness or relaxation techniques..."
 
 ```mermaid
 graph TD
-    subgraph Client Layer
-        A[User Browser] --> B[HTML/CSS/TailwindCSS UI]
+    subgraph Client_Layer
+        A[User Browser] --> B[HTML CSS Tailwind UI]
         B --> C[HTMX Dynamic Updates]
     end
     
-    subgraph API Layer
+    subgraph API_Layer
         C --> D[FastAPI Endpoints]
         D --> E{Route Handler}
-        E --> F["/ui/conversation_turn"]
-        E --> G["/ui/submit_assessment"]
-        E --> H["/api/v1/history"]
+        E --> F[UI Conversation Turn]
+        E --> G[UI Submit Assessment]
+        E --> H[API v1 History]
     end
     
-    subgraph Security Layer
-        F --> I[PII Redaction (spaCy)]
+    subgraph Security_Layer
+        F --> I[PII Redaction spaCy]
         I --> J[Safety Checker]
     end
     
-    subgraph Core Logic Layer
+    subgraph Core_Logic_Layer
         J --> K[Conversation Service]
-        K --> L[Triage Service (BART-MNLI)]
-        K --> M[LLM Orchestration (Gemini)]
+        K --> L[Triage Service BART MNLI]
+        K --> M[LLM Orchestration Gemini]
         M --> N[Belief State Engine]
         N --> O[Assessment Service]
         O --> P[Report Service]
     end
     
-    subgraph Data Layer
-        O --> Q[Encryption Service (AES-256)]
+    subgraph Data_Layer
+        O --> Q[Encryption Service AES256]
         Q --> R[PostgreSQL]
         P --> R
     end
     
-    subgraph AI/ML Stack
+    subgraph AI_ML_Stack
         L --> S[HuggingFace Transformers]
         M --> T[LangChain]
         T --> U[Google Gemini API]
         I --> V[spaCy NER]
     end
+
 ```
 
 ### Component Breakdown
