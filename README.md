@@ -253,27 +253,27 @@ graph TD
     subgraph API Layer
         C --> D[FastAPI Endpoints]
         D --> E{Route Handler}
-        E --> F[/ui/conversation_turn]
-        E --> G[/ui/submit_assessment]
-        E --> H[/api/v1/history]
+        E --> F["/ui/conversation_turn"]
+        E --> G["/ui/submit_assessment"]
+        E --> H["/api/v1/history"]
     end
     
     subgraph Security Layer
-        F --> I[PII Redaction spaCy]
+        F --> I[PII Redaction (spaCy)]
         I --> J[Safety Checker]
     end
     
     subgraph Core Logic Layer
         J --> K[Conversation Service]
-        K --> L[Triage Service BART-MNLI]
-        K --> M[LLM Orchestration Gemini]
+        K --> L[Triage Service (BART-MNLI)]
+        K --> M[LLM Orchestration (Gemini)]
         M --> N[Belief State Engine]
         N --> O[Assessment Service]
         O --> P[Report Service]
     end
     
     subgraph Data Layer
-        O --> Q[Encryption Service AES-256]
+        O --> Q[Encryption Service (AES-256)]
         Q --> R[PostgreSQL]
         P --> R
     end
